@@ -70,7 +70,7 @@
       if (b <= a) return; // R10분량 등 0폭 finding 은 제안 대상이 아니다
       var from = s.slice(a, b);
       if (f.rule === 'N1기재유의어' || f.rule === 'CAUTION') { out.push(fromCaution(f, from)); return; }
-      if (f.rule === 'R9줄바꿈도서명') { out.push(fromR9(f, from)); return; }
+      if (f.rule === 'R9줄바꿈도서명' || f.rule === 'QUOTE') { out.push(fromR9(f, from)); return; }
       if (f.rule === 'N2괄호영문' || f.rule === 'PARENROMAN') { out.push(fromParen(f, from)); return; }
       out.push(mk(f, from, null, 'manual'));
     });

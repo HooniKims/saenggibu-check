@@ -58,5 +58,18 @@ console.log('=== 분량 초과(span 0폭)는 제안 대상이 아니다 ===');
 var over = sug('가'.repeat(600)).filter(function (s) { return s.rule === 'R10분량'; });
 ok(over.length === 0, 'R10 은 제안 목록에서 제외 (실제: ' + over.length + '건)');
 
+console.log('=== 창체 QUOTE 도 교과 R9 와 같게 처리된다 ===');
+var cq = SGB.suggest.build('‘토지’를 읽음',
+  SGB.rulesCareer.scan('‘토지’를 읽음', SGB.rulesCareer.PROFILES.club))
+  .filter(function (s) { return s.rule === 'QUOTE'; });
+ok(cq.length === 2, '창체 굽은따옴표 2건 (실제: ' + cq.length + ')');
+ok(cq.every(function (s) { return s.kind === 'safe' && s.to === "'"; }), '둘 다 safe, 곧은따옴표로');
+
+console.log('=== 창체 MIDDOT 은 manual 유지 (문맥이 치환어를 정한다) ===');
+var cm = SGB.suggest.build('자료·발표를 정리함',
+  SGB.rulesCareer.scan('자료·발표를 정리함', SGB.rulesCareer.PROFILES.club))
+  .filter(function (s) { return s.rule === 'MIDDOT'; });
+ok(cm.length === 1 && cm[0].kind === 'manual' && cm[0].to === null, 'MIDDOT 은 제안 없음');
+
 console.log('\n' + (fail ? '★ 실패 ' + fail + '건' : '★ 전체 통과'));
 process.exit(fail ? 1 : 0);
