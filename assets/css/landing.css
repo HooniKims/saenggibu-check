@@ -1,0 +1,359 @@
+/* ==========================================================================
+   생기부 점검 허브 — 랜딩 페이지 전용 스타일 (index.html)
+   design-system.css 이후에 로드된다.
+
+   DESIGN.md 준수 메모:
+     · 그라디언트 없음 — 전부 솔리드 필
+     · Feature Card 에 box-shadow 없음 (elevation 은 목업 카드 전용)
+     · 액센트 3색은 아이콘·마크에만, 버튼/큰 면적에는 쓰지 않음
+     · 히어로는 일러스트가 아니라 "실제 UI 아티팩트"(점검 결과 카드)를 겹쳐 쌓음
+   ========================================================================== */
+
+/* ---- 섹션 공용 헤더 -------------------------------------------------------- */
+.section-title {
+  font-size: clamp(var(--text-heading-sm), 3.6vw, var(--text-heading));
+  line-height: var(--leading-heading);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+  margin-bottom: var(--spacing-12);
+}
+.section-desc {
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
+  color: var(--color-smoke);
+  max-width: 520px;
+}
+.section-head { margin-bottom: var(--spacing-48); }
+
+/* ---- 히어로 --------------------------------------------------------------- */
+.hero { padding-block: clamp(48px, 8vw, 88px) var(--section-pad); }
+.hero .container {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 480px);
+  gap: var(--spacing-64);
+  align-items: center;
+}
+@media (max-width: 960px) {
+  .hero .container { grid-template-columns: 1fr; gap: var(--spacing-48); }
+  .hero-illus-wrap { order: -1; max-width: 460px; margin-inline: auto; width: 100%; }
+}
+
+.hero-copy .section-eyebrow { margin-bottom: var(--spacing-16); }
+
+.hero-title {
+  font-size: clamp(var(--text-heading), 5vw, var(--text-heading-lg));
+  line-height: var(--leading-heading-lg);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+  margin: 0 0 var(--spacing-24);
+  /* 한국어는 어절(띄어쓰기) 단위로 끊는다. 없으면 좁은 화면에서 '엑셀 파일 하나만 올리 / 면'
+     처럼 낱말 중간이 잘려 조사 한 글자가 다음 줄에 홀로 남는다. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* 시그니처: 헤드라인 핵심 구절에 형광펜이 그어지는 스윕(로드 시 1회) */
+.hl-sweep {
+  background-image: linear-gradient(var(--hl-amber-bg), var(--hl-amber-bg));
+  background-repeat: no-repeat;
+  background-position: 0 88%;
+  background-size: 0% 42%;
+  padding: 0 4px;
+  animation: hl-sweep-in 0.62s cubic-bezier(0.22, 0.75, 0.28, 1) 0.25s forwards;
+}
+@keyframes hl-sweep-in { to { background-size: 100% 42%; } }
+@media (prefers-reduced-motion: reduce) {
+  .hl-sweep { animation: none; background-size: 100% 42%; }
+}
+
+.hero-desc {
+  font-size: var(--text-body-lg);
+  line-height: 1.6;
+  letter-spacing: -0.02em;
+  color: var(--color-smoke);
+  max-width: 480px;
+  margin: 0 0 var(--spacing-36);
+}
+.hero-cta { display: flex; flex-wrap: wrap; gap: var(--spacing-12); }
+.hero-cta .btn { padding: 13px var(--spacing-24); font-size: var(--text-body); }
+
+/* ---- 히어로 목업: 겹쳐 쌓은 점검 결과 카드 -----------------------------------
+   DESIGN.md "Invoice Mockup Card" — 실제 UI 를 살짝 회전·오프셋해 종이 더미처럼.
+   ------------------------------------------------------------------------- */
+.hero-mock {
+  position: relative;
+  padding: var(--spacing-32) var(--spacing-20);
+  display: flex;
+  justify-content: center;
+}
+/* 뒤에 깔리는 종이 2장 */
+.hero-mock::before,
+.hero-mock::after {
+  content: "";
+  position: absolute;
+  inset: var(--spacing-32) var(--spacing-40);
+  background: var(--color-paper);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-subtle);
+}
+.hero-mock::before { transform: rotate(-4deg) translate(-10px, 6px); }
+.hero-mock::after  { transform: rotate(2.4deg) translate(12px, 12px); }
+
+.mock-card {
+  position: relative;
+  z-index: 1;
+  width: min(400px, 100%);
+  background: var(--color-paper);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-elevated);
+  padding: var(--spacing-24);
+  transform: rotate(-1.2deg);
+}
+.mock-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-12);
+  padding-bottom: var(--spacing-16);
+  margin-bottom: var(--spacing-16);
+  border-bottom: 1px solid var(--line-soft);
+}
+.mock-card__eyebrow {
+  font-size: var(--text-eyebrow);
+  line-height: var(--leading-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  color: var(--color-smoke);
+}
+.mock-card__who {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+.mock-card__avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full-3);
+  background: var(--color-iris);
+  flex: none;
+}
+.mock-card__line {
+  font-size: var(--text-body-sm);
+  line-height: 1.95;
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-ink);
+  word-break: keep-all;
+}
+.mock-card__line mark {
+  border-radius: var(--radius-lg);
+  padding: 1px 4px;
+  font-weight: var(--font-weight-semibold);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.mock-card__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-12);
+  margin-top: var(--spacing-20);
+  padding-top: var(--spacing-16);
+  border-top: 1px solid var(--line-soft);
+}
+.mock-card__meta .gauge { flex: 1; }
+/* 값은 HTML의 --fill 변수로 주입 */
+.mock-card__meta .gauge-fill {
+  width: 100%;
+  transform: scaleX(var(--fill, 0));
+  transform-origin: left;
+}
+.mock-card__count {
+  font-size: 12px;
+  color: var(--color-smoke);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---- 도구 카드 2종 ----------------------------------------------------------
+   섹션 간격은 앞 섹션의 padding-bottom 하나로만 만든다. 위아래 모두 주면
+   96 + 96 = 192px 가 되어 DESIGN.md 의 --section-gap(96px)을 두 배로 넘긴다.
+   ------------------------------------------------------------------------- */
+.tools { padding-block: 0 var(--section-pad); }
+.tool-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-16);
+  padding: var(--spacing-32);
+  transition: border-color 0.15s ease;
+}
+.tool-card:hover { border-color: var(--color-concrete); }
+.tool-card__icon {
+  width: 56px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-2xl);
+  background: var(--color-paper);
+  border: 1px solid var(--line-soft);
+  color: var(--color-electric-blue);
+  flex: none;
+}
+.tool-card__title {
+  font-size: var(--text-subheading);
+  line-height: var(--leading-subheading);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-subheading);
+  color: var(--color-ink);
+}
+.tool-card__desc {
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
+  color: var(--color-smoke);
+  flex-grow: 1;
+}
+
+/* ---- 신뢰 스트립 + 상세 ------------------------------------------------------
+   Large Feature Panel — Snow · 32px 반경 · 넉넉한 내부 여백 · 그림자 없음.
+   ------------------------------------------------------------------------- */
+.trust { padding-block: 0 var(--section-pad); }
+
+.trust-strip {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-24);
+  padding: var(--spacing-48) clamp(var(--spacing-24), 4vw, var(--spacing-48));
+  border-radius: var(--radius-3xl);
+  background: var(--color-snow);
+  margin-bottom: var(--spacing-32);
+}
+.trust-strip__icon {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full-3);
+  background: var(--color-paper);
+  color: var(--color-electric-blue);
+  box-shadow: var(--shadow-subtle);
+}
+.trust-strip__title {
+  font-size: clamp(var(--text-subheading), 2.6vw, var(--text-heading-sm));
+  line-height: var(--leading-heading-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+  margin-bottom: 6px;
+}
+.trust-strip__desc {
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
+  color: var(--color-smoke);
+  max-width: 620px;
+}
+@media (max-width: 640px) {
+  .trust-strip { flex-direction: column; align-items: flex-start; gap: var(--spacing-20); padding: var(--spacing-32) var(--spacing-24); }
+}
+
+.trust-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: var(--spacing-40);
+  align-items: start;
+}
+@media (max-width: 840px) { .trust-grid { grid-template-columns: 1fr; gap: var(--spacing-24); } }
+
+.trust-note { padding-top: var(--spacing-4); }
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--spacing-20); }
+.trust-note__text {
+  font-size: var(--text-body-lg);
+  line-height: 1.55;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  max-width: 420px;
+}
+.trust-note__text strong { font-weight: var(--font-weight-semibold); }
+
+.trust-snippet {
+  background: var(--color-paper);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-elevated);
+  padding: var(--spacing-20) var(--spacing-24);
+}
+.file-row { display: flex; align-items: center; gap: var(--spacing-12); }
+.file-row__icon { flex-shrink: 0; color: var(--color-leaf); }
+.file-row__name {
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-grow: 1;
+  min-width: 0;
+}
+.btn-sm { flex-shrink: 0; padding: 7px var(--spacing-16); font-size: 13px; }
+.trust-snippet__desc {
+  font-size: var(--text-body-sm);
+  line-height: 1.6;
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-smoke);
+  margin-top: var(--spacing-16);
+  padding-top: var(--spacing-16);
+  border-top: 1px solid var(--line-soft);
+}
+
+/* ---- 3스텝 사용법 -------------------------------------------------------------
+   실제 순서가 있는 절차이므로 번호(01/02/03) 사용이 정당하다.
+   ------------------------------------------------------------------------- */
+/* 마지막 섹션 — 아래 간격은 .site-footer 의 margin-top 이 만든다 */
+.steps { padding-block: 0; }
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-32);
+  position: relative;
+}
+@media (max-width: 800px) { .steps-grid { grid-template-columns: 1fr; gap: var(--spacing-24); } }
+
+.step { position: relative; padding-top: var(--spacing-20); border-top: 1px solid var(--line); }
+.step-num {
+  display: block;
+  font-size: var(--text-heading-sm);
+  line-height: 1;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.03em;
+  color: var(--color-electric-blue);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: var(--spacing-16);
+}
+.step-title {
+  font-size: var(--text-body-lg);
+  line-height: var(--leading-body-lg);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+  margin-bottom: var(--spacing-8);
+}
+.step-desc {
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
+  color: var(--color-smoke);
+}

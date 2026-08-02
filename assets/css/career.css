@@ -1,0 +1,25 @@
+/* ==========================================================================
+   career.html 전용 스타일.
+   design-system.css · checker.css 의 컴포넌트를 그대로 쓰고, 이 페이지에만
+   필요한 조각(활동유형 탭 영역)만 여기서 보탠다.
+   ========================================================================== */
+
+.type-section { padding-block: var(--spacing-20) var(--spacing-8); }
+
+/* 4개 탭이 모바일에서 알약 밖으로 삐져나가지 않게 가로 스크롤로 흘린다 */
+#activityTabs { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+#activityTabs::-webkit-scrollbar { display: none; }
+#activityTabs .toggle-btn { flex: 0 0 auto; }
+
+/* 선택한 활동유형 설명 — Tinted Accent Card(Electric Blue 10% 워시) */
+.type-desc {
+  margin-top: var(--spacing-16);
+  padding: var(--spacing-16) var(--spacing-20);
+  background: var(--brand-soft);
+  border-radius: var(--radius-2xl);
+  font-size: var(--text-body-sm);
+  line-height: 1.6;
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-smoke);
+  max-width: 720px;
+}

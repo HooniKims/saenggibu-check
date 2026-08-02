@@ -1,0 +1,67 @@
+/* ==========================================================================
+   subject.html 전용 스타일.
+   design-system.css · checker.css 의 컴포넌트를 그대로 쓰고, 이 페이지에만
+   필요한 조각(다중 과목 entry 행, 학생별 보기 블록)만 여기서 보탠다.
+   ========================================================================== */
+
+/* ---- 학생 편집 카드 안의 과목 entry 행 --------------------------------------
+   교과세특은 학생 1명이 과목을 여러 개 가진다(창체와 다른 점).
+   ------------------------------------------------------------------------- */
+.entry-row {
+  padding-top: var(--spacing-16);
+  border-top: 1px solid var(--line-soft);
+  margin-top: var(--spacing-16);
+}
+.entry-row:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
+
+.entry-row__head {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  margin-bottom: var(--spacing-8);
+}
+.entry-row__subject {
+  flex: 1;
+  min-width: 100px;
+  padding: 6px var(--spacing-12);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full-2);
+  background: var(--color-paper);
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-ink);
+}
+.entry-row__subject::placeholder { color: var(--color-ash); font-weight: var(--font-weight-medium); }
+
+.entry-add-btn { margin-top: var(--spacing-16); }
+
+/* ---- 학생별 보기 블록 ------------------------------------------------------- */
+.student-view-block { margin-bottom: var(--spacing-28); }
+.student-view-block__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-8);
+  margin-bottom: var(--spacing-16);
+  padding-bottom: var(--spacing-8);
+  border-bottom: 1px solid var(--line);
+}
+.student-view-block__head h3 {
+  font-size: var(--text-subheading);
+  line-height: var(--leading-subheading);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+}
+.student-view-block__subjects { display: flex; flex-direction: column; gap: var(--spacing-16); }
+
+/* Eyebrow Label 규격 그대로 — 과목명을 결과 카드 위 작은 파란 라벨로 */
+.student-view-block__subject-label {
+  font-size: var(--text-eyebrow);
+  line-height: var(--leading-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  color: var(--color-electric-blue);
+  margin-bottom: var(--spacing-8);
+}

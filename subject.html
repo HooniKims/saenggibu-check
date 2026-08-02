@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>교과세특 점검기 · 생기부 점검 허브</title>
+<meta name="description" content="과목별 세특 엑셀을 올리면 NEIS 기재요령 규칙에 맞는지 과목별로 정리해 보여드립니다.">
+
+<meta property="og:title" content="교과세특 점검기 · 생기부 점검 허브">
+<meta property="og:description" content="과목별 세특 엑셀을 올리면 NEIS 기재요령 규칙에 맞는지 과목별로 정리해 보여드립니다.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ko_KR">
+
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="./assets/css/design-system.css">
+<link rel="stylesheet" href="./assets/css/checker.css">
+<link rel="stylesheet" href="./assets/css/subject.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a class="site-logo" href="./index.html">
+      <svg class="site-logo__mark" width="28" height="28" viewBox="0 0 64 64" aria-hidden="true">
+        <rect width="64" height="64" rx="16" fill="#0d111b"/>
+        <path d="M17 33.5 L27 43.5 L47 20.5" fill="none" stroke="#0098f2" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      생기부 점검 허브
+    </a>
+    <nav class="site-nav" aria-label="주요 메뉴">
+      <a class="site-nav__link" href="./subject.html" aria-current="page">교과세특</a>
+      <a class="site-nav__link" href="./career.html">창체·행특</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <section class="page-head">
+    <div class="container">
+      <span class="section-eyebrow">NEIS 과목별세특 점검</span>
+      <h1 class="page-title">교과세특 점검기</h1>
+      <p class="page-desc">과목별세특 엑셀을 올리면 과목별로 자동 구분해 기재요령 규칙(줄바꿈·과거시제·특수기호·역량어 단독 등)에 맞는지 바로 점검합니다. 학생 데이터는 브라우저 밖으로 나가지 않습니다.</p>
+    </div>
+  </section>
+
+  <section class="upload-section">
+    <div class="container">
+      <div class="card">
+        <h2 class="card-title">엑셀 파일 불러오기</h2>
+        <div class="neis-guide" id="neisGuide">
+          <p class="neis-guide__label">NEIS에서 아래 메뉴 경로로 내려받은 엑셀 파일을 올려주세요</p>
+          <div class="neis-guide__path">
+            <span>성적처리</span><span class="neis-guide__sep">›</span>
+            <span>과목별세특</span><span class="neis-guide__sep">›</span>
+            <span>내려받기</span>
+          </div>
+          <p class="neis-guide__note">여러 과목 파일을 한 번에 선택하면 학생 기준(번호·성명)으로 자동으로 합쳐집니다.</p>
+        </div>
+
+        <div class="upload-zone" id="uploadZone" tabindex="0" role="button" aria-label="엑셀 파일 올리기">
+          <input type="file" id="fileInput" accept=".xlsx,.xls" multiple hidden>
+          <p class="upload-zone__main">
+            여기로 엑셀 파일을 끌어다 놓거나
+            <button type="button" class="btn btn-primary" id="browseBtn">파일 선택</button>
+          </p>
+          <p class="upload-zone__hint" id="uploadHint">과목별세특 엑셀(.xlsx)을 선택하세요. 다중 파일 업로드를 지원합니다.</p>
+        </div>
+
+        <div class="upload-row" id="sheetRow" hidden>
+          <label for="sheetSelect">시트 선택</label>
+          <select id="sheetSelect"></select>
+          <button type="button" class="btn btn-ghost" id="reloadBtn">다시 불러오기</button>
+        </div>
+
+        <p class="upload-status" id="uploadStatus" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="settings-section">
+    <div class="container">
+      <div class="card settings-row">
+        <label class="settings-row__field" for="profileSelect">
+          <span class="settings-row__label">교과 프로파일</span>
+          <select id="profileSelect">
+            <option value="general">일반</option>
+            <option value="math">수학</option>
+            <option value="science">과학</option>
+            <option value="english">영어</option>
+          </select>
+        </label>
+        <label class="settings-row__field" for="byteLimit">
+          <span class="settings-row__label">바이트 제한</span>
+          <input type="number" id="byteLimit" value="1500" min="50" step="10">
+        </label>
+        <span class="settings-row__hint">한글 1자 = 3바이트 · NEIS 기준 1,500바이트</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="students-section">
+    <div class="container">
+      <div class="section-head-row">
+        <button type="button" class="section-toggle" id="studentsToggle" aria-expanded="true" aria-controls="cardsContainer">
+          <span class="section-title-sm" id="studentsToggleLabel">학생자료</span>
+          <svg class="section-toggle__caret" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9 L12 15 L18 9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="students-actions">
+          <button type="button" class="btn btn-ghost" id="addBtn">+ 학생 직접 추가</button>
+          <button type="button" class="btn btn-ghost" id="clearBtn">전체 지우기</button>
+          <button type="button" class="btn btn-primary" id="analyzeBtn">전체 점검하기</button>
+        </div>
+      </div>
+
+      <div id="cardsContainer"></div>
+    </div>
+  </section>
+
+  <section class="results-section" id="resultsSection">
+    <div class="container">
+      <h2 class="results-headline" id="resultsHeadline" tabindex="-1" hidden></h2>
+    </div>
+    <div class="container results-summary" id="resultsSummary"></div>
+
+    <div class="action-bar" id="actionBar" hidden>
+      <div class="container action-bar__row">
+        <span class="action-bar__label" id="actionBarLabel"></span>
+        <div class="action-bar__buttons">
+          <button type="button" class="btn btn-primary" id="exportSummaryBtn"><span class="btn-label-full">전체 요약 xlsx</span><span class="btn-label-short">요약</span></button>
+          <button type="button" class="btn btn-ghost" id="exportZipBtn"><span class="btn-label-full">과목별 모두 받기(zip)</span><span class="btn-label-short">zip</span></button>
+          <button type="button" class="btn btn-ghost" id="copyIssuesBtn"><span class="btn-label-full">이슈만 복사</span><span class="btn-label-short">복사</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="results-controls" id="resultsControls" hidden>
+        <div class="toggle-group" id="viewToggle" role="tablist" aria-label="결과 보기 방식">
+          <button type="button" class="toggle-btn active" data-view="subject" role="tab" aria-selected="true">과목별 보기</button>
+          <button type="button" class="toggle-btn" data-view="student" role="tab" aria-selected="false">학생별 보기</button>
+        </div>
+        <div class="filter-row" id="subjectFilters"></div>
+        <div class="results-toggles" id="resultsToggles">
+          <label class="check-toggle"><input type="checkbox" id="onlyViolationsToggle"> 확정 위반만 보기</label>
+          <label class="check-toggle"><input type="checkbox" id="onlyIssuesToggle"> 이슈 있는 학생만</label>
+        </div>
+      </div>
+
+      <details class="legend-details" id="legendDetails" hidden>
+        <summary class="legend-details__summary">범례 보기</summary>
+        <div class="legend" id="legend"></div>
+      </details>
+
+      <div id="resultsBody"></div>
+
+      <div class="empty-state" id="emptyState" hidden>
+        <div class="illus illus-empty" role="img" aria-label="빈 상태 안내">
+          <svg viewBox="0 0 96 96" width="64" height="64" fill="none" aria-hidden="true">
+            <rect x="20" y="16" width="56" height="64" rx="8" fill="none" stroke="currentColor" stroke-width="4"/>
+            <path d="M32 46 L44 58 L66 32" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <p>엑셀을 올리면 여기에 과목별 결과가 정리됩니다</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container site-footer__inner">
+    <p class="site-footer__credit">김형훈 · <a href="mailto:greenguyhh@sen.go.kr">greenguyhh@sen.go.kr</a></p>
+    <p class="site-footer__privacy">학생 데이터는 브라우저 밖으로 나가지 않습니다</p>
+  </div>
+</footer>
+
+<script src="./assets/vendor/xlsx.full.min.js"></script>
+<script src="./assets/vendor/jszip.min.js"></script>
+<script src="./assets/js/checker-core.js"></script>
+<script src="./assets/js/xlsx-parse.js"></script>
+<script src="./assets/js/export.js"></script>
+<script src="./assets/js/rules-subject.js"></script>
+<script src="./assets/js/subject-app.js"></script>
+</body>
+</html>

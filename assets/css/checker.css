@@ -1,0 +1,505 @@
+/* ==========================================================================
+   생기부 점검 허브 — 점검기 화면 공용 스타일 (subject.html / career.html)
+   design-system.css 이후에 로드된다.
+   ========================================================================== */
+
+/* ---- 형광펜 7색 -----------------------------------------------------------
+   mark든 span이든 이 클래스를 붙이면 배경/글자색 짝이 적용된다.
+     <mark class="m-red" title="위반: ...">문구</mark>
+     <span class="issue-tag m-brown">확인 필요</span>
+
+   DESIGN.md는 "화면당 유채색 액센트 2개 초과 금지"를 규정하지만, 이 7색은
+   장식이 아니라 규칙 종류를 나르는 데이터 인코딩이므로 명시적 예외로 둔다.
+   대신 색 자체는 전부 DESIGN.md 토큰에서 파생시켰고(m-amber만 확장),
+   버튼·배경·링크 등 UI 크롬에는 절대 쓰지 않는다.
+   ------------------------------------------------------------------------- */
+.m-red    { background: var(--hl-red-bg);    color: var(--hl-red-ink); }
+.m-brown  { background: var(--hl-brown-bg);  color: var(--hl-brown-ink); }
+.m-rose   { background: var(--hl-rose-bg);   color: var(--hl-rose-ink); }
+.m-amber  { background: var(--hl-amber-bg);  color: var(--hl-amber-ink); }
+.m-violet { background: var(--hl-violet-bg); color: var(--hl-violet-ink); }
+.m-teal   { background: var(--hl-teal-bg);   color: var(--hl-teal-ink); }
+.m-slate  { background: var(--hl-slate-bg);  color: var(--hl-slate-ink); }
+
+/* ---- 페이지 머리 ---------------------------------------------------------- */
+.page-head { padding-block: var(--spacing-48) var(--spacing-8); }
+.page-head .badge { margin-bottom: var(--spacing-16); }
+.page-desc {
+  margin-top: var(--spacing-12);
+  max-width: 640px;
+  color: var(--color-smoke);
+  font-size: var(--text-body);
+  line-height: 1.7;
+  letter-spacing: var(--tracking-body);
+}
+
+.upload-section, .settings-section, .students-section { padding-block: var(--spacing-20); }
+
+.card-title {
+  font-size: var(--text-subheading);
+  line-height: var(--leading-subheading);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.03em;
+  margin-bottom: var(--spacing-16);
+}
+
+/* ---- NEIS 경로 안내 -------------------------------------------------------
+   Tinted Accent Card — Electric Blue 10% 워시. 반경 16px, 그림자 없음.
+   ------------------------------------------------------------------------- */
+.neis-guide {
+  margin-bottom: var(--spacing-16);
+  padding: var(--spacing-16) var(--spacing-20);
+  background: var(--brand-soft);
+  border-radius: var(--radius-2xl);
+  font-size: var(--text-body-sm);
+  line-height: var(--leading-body-sm);
+  letter-spacing: var(--tracking-body-sm);
+}
+.neis-guide__label { margin: 0 0 var(--spacing-8); color: var(--color-smoke); }
+.neis-guide__label strong { color: var(--color-ink); font-weight: var(--font-weight-semibold); }
+.neis-guide__path {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px var(--spacing-4);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-ink);
+}
+.neis-guide__sep { color: var(--color-electric-blue); font-weight: var(--font-weight-medium); margin: 0 2px; }
+.neis-guide__example,
+.neis-guide__note {
+  margin: var(--spacing-8) 0 0;
+  color: var(--color-smoke);
+  font-size: 13px;
+}
+
+/* ---- 업로드 존 내부 -------------------------------------------------------- */
+.upload-zone__main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-12);
+  font-size: var(--text-body);
+  letter-spacing: var(--tracking-body);
+  color: var(--color-smoke);
+  margin: 0 0 var(--spacing-8);
+}
+.upload-zone__hint {
+  font-size: var(--text-body-sm);
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-fog);
+  margin: 0;
+}
+.upload-status {
+  margin: var(--spacing-12) 0 0;
+  font-size: var(--text-body-sm);
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-smoke);
+  min-height: 1.4em;
+}
+.upload-status.ok  { color: var(--hl-ok-ink); font-weight: var(--font-weight-semibold); }
+.upload-status.err { color: var(--hl-red-ink); font-weight: var(--font-weight-semibold); }
+
+.upload-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-12);
+  margin-top: var(--spacing-16);
+}
+.upload-row label {
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-ink);
+}
+
+/* ---- 폼 컨트롤 공용 -------------------------------------------------------- */
+.upload-row select,
+.settings-row select,
+.settings-row input[type="number"] {
+  padding: var(--spacing-8) var(--spacing-12);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--color-paper);
+  font-size: var(--text-body-sm);
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-ink);
+}
+.settings-row input[type="number"] { width: 88px; }
+
+/* ---- 설정 행 --------------------------------------------------------------- */
+.settings-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-12) var(--spacing-20);
+  padding: var(--spacing-16) var(--spacing-24);
+  font-size: var(--text-body-sm);
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-smoke);
+}
+.settings-row__field { display: flex; align-items: center; gap: var(--spacing-8); }
+.settings-row__label { font-weight: var(--font-weight-semibold); color: var(--color-ink); }
+.settings-row__hint,
+.settings-row__source { color: var(--color-fog); }
+
+/* ---- 학생자료 섹션 헤더 ----------------------------------------------------- */
+.section-head-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-12);
+  margin-bottom: var(--spacing-16);
+}
+.section-title-sm {
+  font-size: var(--text-subheading);
+  line-height: var(--leading-subheading);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.03em;
+}
+.students-actions { display: flex; flex-wrap: wrap; gap: var(--spacing-8); }
+
+.section-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  cursor: pointer;
+  padding: var(--spacing-4) 2px;
+}
+.section-toggle__caret { color: var(--color-fog); transition: transform 0.15s ease; flex-shrink: 0; }
+.section-toggle[aria-expanded="false"] .section-toggle__caret { transform: rotate(-90deg); }
+
+/* ---- 액션 바 --------------------------------------------------------------- */
+.action-bar {
+  position: sticky;
+  top: var(--header-h);
+  z-index: var(--z-actionbar);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: saturate(180%) blur(10px);
+  -webkit-backdrop-filter: saturate(180%) blur(10px);
+  border-bottom: 1px solid var(--line-soft);
+  padding-block: var(--spacing-12);
+}
+.action-bar__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-12);
+}
+.action-bar__label {
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-smoke);
+}
+.action-bar__buttons { display: flex; flex-wrap: wrap; gap: var(--spacing-8); }
+.btn-label-short { display: none; }
+@media (max-width: 640px) {
+  /* 모바일은 버튼이 줄바꿈 없이 한 줄에 들어가도록 축약 라벨로 전환 */
+  .action-bar__buttons { flex-wrap: nowrap; gap: 6px; }
+  .action-bar__buttons .btn { flex: 1 1 0; min-width: 0; padding: 10px 6px; gap: 0; }
+  .btn-label-full { display: none; }
+  .btn-label-short { display: inline; }
+}
+
+/* ---- 결과 헤드라인 (점검 실행 후 스크롤 앵커) --------------------------------- */
+.results-headline {
+  padding-block: var(--spacing-32) 0;
+  font-size: var(--text-subheading);
+  line-height: var(--leading-subheading);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+  scroll-margin-top: calc(var(--header-h) + var(--spacing-16));
+}
+.results-summary { padding-block: var(--spacing-24) var(--spacing-8); }
+.stat-label { white-space: nowrap; }
+
+.results-section { padding-block: var(--spacing-8) var(--spacing-48); }
+.results-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-12);
+  padding-block: var(--spacing-20) var(--spacing-4);
+}
+.results-toggles { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-8) var(--spacing-20); }
+.check-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-smoke);
+  cursor: pointer;
+}
+.check-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-electric-blue);
+  cursor: pointer;
+}
+
+/* ---- 범례 (결과가 있을 때만 노출) --------------------------------------------- */
+.legend-details { margin: 0 0 var(--spacing-20); }
+.legend-details__summary {
+  cursor: pointer;
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--brand-deep);
+  padding: var(--spacing-4) 2px;
+  list-style: none;
+}
+.legend-details__summary::-webkit-details-marker { display: none; }
+.legend-details__summary::marker { content: ''; }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-8) var(--spacing-20);
+  margin: var(--spacing-8) 0 0;
+  padding: var(--spacing-16) var(--spacing-20);
+  background: var(--color-snow);
+  border-radius: var(--radius-2xl);
+  font-size: var(--text-body-sm);
+  letter-spacing: var(--tracking-body-sm);
+}
+.legend-item { display: inline-flex; align-items: center; gap: 6px; color: var(--color-smoke); }
+.legend-swatch { width: 12px; height: 12px; border-radius: var(--radius-full-3); flex: none; }
+
+/* ---- 과목/유형 섹션 --------------------------------------------------------- */
+.subject-section { padding-block: var(--spacing-32); border-bottom: 1px solid var(--line-soft); }
+.subject-section:last-child { border-bottom: none; }
+.subject-section-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-12);
+  padding-bottom: var(--spacing-16);
+  margin-bottom: var(--spacing-20);
+  border-bottom: 1px solid var(--line);
+}
+.subject-section-header h2,
+.subject-section-header h3 {
+  display: inline;
+  font-size: var(--text-subheading);
+  line-height: var(--leading-subheading);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+}
+.subject-section-header .badge { margin-left: var(--spacing-8); }
+.subject-section-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  font-size: var(--text-body-sm);
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-smoke);
+}
+.subject-section-header__actions { display: flex; align-items: center; gap: var(--spacing-8); }
+.subject-section-students { display: flex; flex-direction: column; gap: var(--spacing-16); }
+
+/* ---- 학생 결과 카드 ---------------------------------------------------------
+   Elevated Card — 본문 가독성을 위해 여기만 elevation 을 허용한다.
+   ------------------------------------------------------------------------- */
+.student-card {
+  background: var(--color-paper);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-2xl-2);
+  box-shadow: var(--shadow-elevated);
+  padding: var(--spacing-24);
+}
+.student-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-12);
+  margin-bottom: var(--spacing-16);
+}
+.student-card__name {
+  font-size: var(--text-body);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+}
+.student-card__no {
+  font-size: var(--text-body-sm);
+  color: var(--color-smoke);
+  font-variant-numeric: tabular-nums;
+  margin-left: 6px;
+}
+.student-card__gauge-wrap { display: flex; align-items: center; gap: var(--spacing-12); min-width: 180px; }
+.student-card__gauge-wrap .gauge { flex-grow: 1; }
+.student-card__gauge-label {
+  font-size: 13px;
+  color: var(--color-smoke);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* 게이지 채움은 width 대신 transform:scaleX 로 — 레이아웃 재계산 없이 합성만.
+   checker-core.js renderGauge() 가 fill.style.transform 을 갱신한다. */
+.gauge-fill {
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+/* ---- 본문 하이라이트 --------------------------------------------------------- */
+.annotated {
+  max-width: 80ch;
+  font-size: var(--text-body);
+  line-height: 1.9;
+  letter-spacing: var(--tracking-body);
+  color: var(--color-ink);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.annotated mark {
+  border-radius: var(--radius-lg);
+  padding: 1px 4px;
+  font-weight: var(--font-weight-semibold);
+  cursor: help;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* ---- 이슈 목록 --------------------------------------------------------------- */
+.issue-list { display: flex; flex-direction: column; gap: var(--spacing-8); margin-top: var(--spacing-16); }
+.issue-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-12);
+  padding: var(--spacing-12) var(--spacing-16);
+  background: var(--color-snow);
+  border-radius: var(--radius-2xl);
+  font-size: var(--text-body-sm);
+  line-height: 1.6;
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-ink);
+}
+.issue-tag {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--spacing-12);
+  border-radius: var(--radius-full-2);
+  font-size: 12px;
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+.issue-item__note { color: var(--color-smoke); }
+.issue-clean {
+  margin-top: var(--spacing-12);
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--hl-ok-ink);
+}
+
+/* 동일 규칙 다수 발생을 1행으로 접기 */
+.issue-group__toggle { width: 100%; cursor: pointer; text-align: left; }
+.issue-group__caret { margin-left: auto; color: var(--color-fog); transition: transform 0.15s ease; flex-shrink: 0; }
+.issue-group__toggle[aria-expanded="true"] .issue-group__caret { transform: rotate(180deg); }
+.issue-group__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  margin-top: var(--spacing-8);
+  padding-left: var(--spacing-12);
+  border-left: 2px solid var(--line);
+}
+
+/* ---- 학생 편집 카드 ----------------------------------------------------------- */
+.student-edit-card { margin-bottom: var(--spacing-16); }
+.student-edit-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-12);
+  flex-wrap: wrap;
+  margin-bottom: var(--spacing-12);
+}
+.student-edit-card__no,
+.student-edit-card__name {
+  border: none;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  padding: var(--spacing-4) 2px;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--text-body);
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+}
+.student-edit-card__no { width: 72px; flex: none; }
+.student-edit-card__name { flex: 1; min-width: 120px; }
+.student-edit-card__no:focus,
+.student-edit-card__name:focus { outline: none; border-color: var(--color-electric-blue); box-shadow: none; }
+
+.student-edit-card__remove,
+.entry-row__remove {
+  margin-left: auto;
+  padding: var(--spacing-4) var(--spacing-12);
+  border-radius: var(--radius-full-2);
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-smoke);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.student-edit-card__remove:hover,
+.entry-row__remove:hover { background: var(--hl-red-bg); color: var(--hl-red-ink); }
+
+.student-edit-card textarea {
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-2xl);
+  padding: var(--spacing-16);
+  font-size: var(--text-body);
+  line-height: 1.8;
+  letter-spacing: var(--tracking-body);
+  color: var(--color-ink);
+  background: var(--color-paper);
+}
+.student-edit-card textarea::placeholder { color: var(--color-ash); }
+
+.student-edit-card__meta,
+.entry-row__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-12);
+  margin-top: var(--spacing-8);
+}
+.student-edit-card__meta .gauge,
+.entry-row__meta .gauge { flex: 1; }
+.student-edit-card__count,
+.entry-row__count {
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--color-smoke);
+  font-variant-numeric: tabular-nums;
+}
+.student-edit-card__count.over,
+.entry-row__count.over { color: var(--hl-red-ink); font-weight: var(--font-weight-semibold); }
+
+/* ---- 빈 상태 아이콘 ----------------------------------------------------------- */
+.illus-empty svg { color: var(--color-electric-blue); }
+
+/* ---- 반응형 ------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .student-card { padding: var(--spacing-20); }
+  .subject-section-header { align-items: flex-start; }
+  .settings-row { padding: var(--spacing-16); }
+  .students-actions .btn { flex: 1 1 auto; }
+  .results-controls { align-items: stretch; }
+}

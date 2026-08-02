@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>창체·행특 점검기 · 생기부 점검 허브</title>
+<meta name="description" content="동아리·진로·자율·행동특성 엑셀을 올리면 활동유형별로 정리해 NEIS 기재 가이드에 맞는지 바로 점검합니다.">
+
+<meta property="og:title" content="창체·행특 점검기 · 생기부 점검 허브">
+<meta property="og:description" content="동아리·진로·자율·행동특성 엑셀을 올리면 활동유형별로 정리해 NEIS 기재 가이드에 맞는지 바로 점검합니다.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ko_KR">
+
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="./assets/css/design-system.css">
+<link rel="stylesheet" href="./assets/css/checker.css">
+<link rel="stylesheet" href="./assets/css/career.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a class="site-logo" href="./index.html">
+      <svg class="site-logo__mark" width="28" height="28" viewBox="0 0 64 64" aria-hidden="true">
+        <rect width="64" height="64" rx="16" fill="#0d111b"/>
+        <path d="M17 33.5 L27 43.5 L47 20.5" fill="none" stroke="#0098f2" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      생기부 점검 허브
+    </a>
+    <nav class="site-nav" aria-label="주요 메뉴">
+      <a class="site-nav__link" href="./subject.html">교과세특</a>
+      <a class="site-nav__link" href="./career.html" aria-current="page">창체·행특</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <section class="page-head">
+    <div class="container">
+      <span class="section-eyebrow">NEIS 창체·행동특성 점검</span>
+      <h1 class="page-title">창체·행특 점검기</h1>
+      <p class="page-desc">동아리·진로·자율·행동특성 엑셀을 올리면 학생별로 자동 분리한 뒤 생기부 기재 가이드(기재불가·대체표현)를 반영해 점검합니다. 학생 데이터는 브라우저 밖으로 나가지 않습니다.</p>
+    </div>
+  </section>
+
+  <section class="type-section">
+    <div class="container">
+      <div class="toggle-group" id="activityTabs" role="tablist" aria-label="활동 유형 선택">
+        <button type="button" class="toggle-btn active" data-type="club" role="tab" aria-selected="true">동아리활동</button>
+        <button type="button" class="toggle-btn" data-type="career" role="tab" aria-selected="false">진로활동</button>
+        <button type="button" class="toggle-btn" data-type="auto" role="tab" aria-selected="false">자율활동</button>
+        <button type="button" class="toggle-btn" data-type="behavior" role="tab" aria-selected="false">행동특성·종합의견</button>
+      </div>
+      <p class="type-desc" id="typeDesc"></p>
+    </div>
+  </section>
+
+  <section class="upload-section">
+    <div class="container">
+      <div class="card">
+        <h2 class="card-title">엑셀 파일 불러오기</h2>
+        <div class="neis-guide" id="neisGuide"></div>
+
+        <div class="upload-zone" id="uploadZone" tabindex="0" role="button" aria-label="엑셀 파일 올리기">
+          <input type="file" id="fileInput" accept=".xlsx,.xls" multiple hidden>
+          <p class="upload-zone__main">
+            여기로 엑셀 파일을 끌어다 놓거나
+            <button type="button" class="btn btn-primary" id="browseBtn">파일 선택</button>
+          </p>
+          <p class="upload-zone__hint" id="uploadHint">여러 파일을 한 번에 올리면 성명·번호 기준으로 자동 합쳐집니다.</p>
+        </div>
+        <p class="upload-status" id="uploadStatus" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="settings-section">
+    <div class="container">
+      <div class="card settings-row">
+        <label class="settings-row__field" for="byteLimit">
+          <span class="settings-row__label">바이트 제한</span>
+          <input type="number" id="byteLimit" value="1500" min="50" step="10">
+        </label>
+        <span class="settings-row__hint" id="byteHint"></span>
+        <span class="settings-row__source" id="sourceInfo"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="students-section">
+    <div class="container">
+      <div class="section-head-row">
+        <button type="button" class="section-toggle" id="studentsToggle" aria-expanded="true" aria-controls="cardsContainer">
+          <span class="section-title-sm" id="studentsToggleLabel">학생 자료</span>
+          <svg class="section-toggle__caret" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9 L12 15 L18 9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="students-actions">
+          <button type="button" class="btn btn-ghost" id="addBtn">+ 학생 직접 추가</button>
+          <button type="button" class="btn btn-ghost" id="clearBtn">전체 지우기</button>
+          <button type="button" class="btn btn-primary" id="analyzeBtn">전체 점검하기</button>
+        </div>
+      </div>
+
+      <div id="cardsContainer"></div>
+    </div>
+  </section>
+
+  <section class="results-section" id="resultsSection">
+    <div class="container">
+      <h2 class="results-headline" id="resultsHeadline" tabindex="-1" hidden></h2>
+    </div>
+    <div class="container results-summary" id="resultsSummary"></div>
+
+    <div class="action-bar" id="actionBar" hidden>
+      <div class="container action-bar__row">
+        <span class="action-bar__label" id="actionBarLabel"></span>
+        <div class="action-bar__buttons">
+          <button type="button" class="btn btn-primary" id="exportSummaryBtn"><span class="btn-label-full">전체 요약 xlsx</span><span class="btn-label-short">요약</span></button>
+          <button type="button" class="btn btn-ghost" id="copyIssuesBtn"><span class="btn-label-full">이슈만 복사</span><span class="btn-label-short">복사</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="results-controls" id="resultsControls" hidden>
+        <div class="results-toggles" id="resultsToggles">
+          <label class="check-toggle"><input type="checkbox" id="onlyViolationsToggle"> 확정 위반만 보기</label>
+          <label class="check-toggle"><input type="checkbox" id="onlyIssuesToggle"> 이슈 있는 학생만</label>
+        </div>
+      </div>
+
+      <details class="legend-details" id="legendDetails" hidden>
+        <summary class="legend-details__summary">범례 보기</summary>
+        <div class="legend" id="legend"></div>
+      </details>
+
+      <div id="resultsBody"></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container site-footer__inner">
+    <p class="site-footer__credit">김형훈 · <a href="mailto:greenguyhh@sen.go.kr">greenguyhh@sen.go.kr</a></p>
+    <p class="site-footer__privacy">학생 데이터는 브라우저 밖으로 나가지 않습니다</p>
+  </div>
+</footer>
+
+<script src="./assets/vendor/xlsx.full.min.js"></script>
+<script src="./assets/js/checker-core.js"></script>
+<script src="./assets/js/xlsx-parse.js"></script>
+<script src="./assets/js/export.js"></script>
+<script src="./assets/js/rules-career.js"></script>
+<script src="./assets/js/career-app.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+# 도구가 만드는 로컬 상태 — 토큰·PID가 들어 있으므로 절대 커밋하지 않는다
+.gstack/
+
+# humanize-korean 작업 산출물 (카피 윤문 기록)
+_workspace/
+
+# macOS
+.DS_Store

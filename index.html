@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>생기부 점검 허브</title>
+<meta name="description" content="NEIS 학생부 세특·창체 문장을 브라우저 안에서 바로 점검하고 과목별·유형별로 정리해 내려받습니다.">
+
+<meta property="og:title" content="생기부 점검 허브">
+<meta property="og:description" content="NEIS 학생부 세특·창체 문장을 브라우저 안에서 바로 점검하고 과목별·유형별로 정리해 내려받습니다.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ko_KR">
+
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="./assets/css/design-system.css">
+<link rel="stylesheet" href="./assets/css/landing.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a class="site-logo" href="./index.html">
+      <svg class="site-logo__mark" width="28" height="28" viewBox="0 0 64 64" aria-hidden="true">
+        <rect width="64" height="64" rx="16" fill="#0d111b"/>
+        <path d="M17 33.5 L27 43.5 L47 20.5" fill="none" stroke="#0098f2" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      생기부 점검 허브
+    </a>
+    <nav class="site-nav" aria-label="주요 메뉴">
+      <a class="site-nav__link" href="./subject.html">교과세특</a>
+      <a class="site-nav__link" href="./career.html">창체·행특</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- 히어로 -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-copy">
+        <span class="section-eyebrow">NEIS 학생부 점검 도구</span>
+        <h1 class="hero-title">
+          엑셀 파일 하나만 올리면<br>
+          <span class="hl-sweep">고칠 문장에만 형광펜이 뜹니다</span>
+        </h1>
+        <p class="hero-desc">
+          학급 세특이든 창체·행특이든 한 번 올리면 과목별·유형별로 정리해 보여드립니다.
+          학생 데이터는 브라우저 밖으로 나가지 않습니다.
+        </p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="./subject.html">교과세특 점검하기</a>
+          <a class="btn btn-ghost" href="./career.html">창체·행특 점검하기</a>
+        </div>
+      </div>
+
+      <div class="hero-illus-wrap">
+        <!-- 일러스트가 아니라 실제 점검 결과 카드를 겹쳐 쌓은 UI 목업 -->
+        <div class="hero-mock" role="img" aria-label="생기부 문장에 형광펜으로 표시된 점검 결과 미리보기">
+          <div class="mock-card">
+            <div class="mock-card__head">
+              <span class="mock-card__eyebrow">과목세특 · 국어</span>
+              <span class="mock-card__who"><span class="mock-card__avatar"></span>12 김서연</span>
+            </div>
+            <p class="mock-card__line">
+              <mark class="m-brown">학생은</mark> 모둠 토의에서 근거 자료를
+              <mark class="m-red">정리했고</mark>, 발표문 초고를 다듬어 반론에 대응함.
+              활동을 통해 <mark class="m-rose">뿌듯함을 느꼈다고</mark> 밝힘.
+            </p>
+            <div class="mock-card__meta">
+              <span class="badge">이슈 3건</span>
+              <div class="gauge"><div class="gauge-fill" style="--fill:.78"></div></div>
+              <span class="mock-card__count">1,170 / 1,500B</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 도구 카드 2 -->
+  <section class="tools">
+    <div class="container">
+      <div class="section-head">
+        <h2 class="section-title">점검할 문서 고르기</h2>
+        <p class="section-desc">교과세특과 창체·행특 중에서 먼저 고르세요.</p>
+      </div>
+
+      <div class="grid-2">
+        <article class="card tool-card">
+          <span class="tool-card__icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 96 96" fill="none">
+              <rect x="24" y="14" width="48" height="68" rx="8" fill="none" stroke="currentColor" stroke-width="5"/>
+              <line x1="36" y1="34" x2="60" y2="34" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+              <line x1="36" y1="46" x2="60" y2="46" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+              <line x1="36" y1="58" x2="50" y2="58" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <h3 class="tool-card__title">교과세특 점검기</h3>
+          <p class="tool-card__desc">학급 세특 엑셀을 올리면 과목별 섹션으로 나눠 규칙에 맞는지 확인합니다.</p>
+          <a class="btn btn-primary" href="./subject.html">교과세특 점검하기 →</a>
+        </article>
+
+        <article class="card tool-card">
+          <span class="tool-card__icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 96 96" fill="none">
+              <circle cx="48" cy="48" r="32" fill="none" stroke="currentColor" stroke-width="5"/>
+              <path d="M62 34 L53 53 L34 62 L43 43 Z" fill="currentColor"/>
+            </svg>
+          </span>
+          <h3 class="tool-card__title">창체·행특 점검기</h3>
+          <p class="tool-card__desc">동아리·진로·자율·행발 4가지 활동 유형을 자동으로 구분해 점검합니다.</p>
+          <a class="btn btn-primary" href="./career.html">창체·행특 점검하기 →</a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 신뢰 스트립 + 상세 -->
+  <section class="trust">
+    <div class="container">
+      <div class="trust-strip">
+        <span class="trust-strip__icon" aria-hidden="true">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+            <path d="M12 3l7 3v5c0 5-3.2 8.5-7 10-3.8-1.5-7-5-7-10V6l7-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M9 12.2l2 2 4-4.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <div class="trust-strip__copy">
+          <h2 class="trust-strip__title">학생 데이터는 브라우저 밖으로 나가지 않습니다</h2>
+          <p class="trust-strip__desc">업로드한 엑셀은 서버로 전송되지 않습니다. 이 브라우저 탭 안에서만 열리고 처리됩니다.</p>
+        </div>
+      </div>
+
+      <div class="trust-grid">
+        <div class="trust-note">
+          <div class="chip-row">
+            <span class="chip">국어</span><span class="chip">수학</span><span class="chip">사회</span><span class="chip">과학</span>
+          </div>
+          <p class="trust-note__text">여러 과목이 섞인 학급 세특도 자동으로 <strong>과목별 섹션</strong>을 나눠 정리합니다.</p>
+        </div>
+
+        <div class="trust-snippet">
+          <div class="file-row" aria-hidden="true">
+            <svg class="file-row__icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              <path d="M14 3v5h5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+            </svg>
+            <span class="file-row__name">1-3반_국어_점검결과.xlsx</span>
+            <span class="btn btn-primary btn-sm">다운로드</span>
+          </div>
+          <p class="trust-snippet__desc">점검이 끝나면 결과 화면에서 전체 요약과 과목별 파일을 바로 내려받습니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3스텝 사용법 -->
+  <section class="steps">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-eyebrow">이용 방법</span>
+        <h2 class="section-title">3단계면 끝납니다</h2>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step">
+          <span class="step-num">01</span>
+          <h3 class="step-title">NEIS에서 세특 엑셀 내려받기</h3>
+          <p class="step-desc">NEIS에서 학급별 세부능력 및 특기사항 엑셀 파일을 내려받으세요.</p>
+        </div>
+        <div class="step">
+          <span class="step-num">02</span>
+          <h3 class="step-title">엑셀 올리기</h3>
+          <p class="step-desc">점검기 화면에 파일을 끌어다 놓거나 선택해 올리세요.</p>
+        </div>
+        <div class="step">
+          <span class="step-num">03</span>
+          <h3 class="step-title">결과 받기</h3>
+          <p class="step-desc">과목별로 정리된 점검 결과를 확인하고 바로 내려받으세요.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container site-footer__inner">
+    <p class="site-footer__credit">김형훈 · <a href="mailto:greenguyhh@sen.go.kr">greenguyhh@sen.go.kr</a></p>
+    <p class="site-footer__privacy">학생 데이터는 브라우저 밖으로 나가지 않습니다</p>
+  </div>
+</footer>
+
+</body>
+</html>

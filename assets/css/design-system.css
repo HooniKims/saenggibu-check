@@ -1,0 +1,592 @@
+/* ==========================================================================
+   생기부 점검 허브 — Design System
+   DESIGN.md("Acctual — Paper invoice on frosted glass") 준수판.
+
+   구성:
+     1. Paperlogy @font-face
+     2. DESIGN.md 원문 토큰 (--color-* / --text-* / --spacing-* / --radius-* …)
+     3. 시맨틱 별칭 (--ink / --line / --surface …) — 위 토큰 위에 얹는다
+     4. 리셋 · 레이아웃 · 공용 컴포넌트
+
+   ★ 3의 별칭 계층이 핵심이다. subject.html·career.html·각 app.js가 쓰는
+     클래스 계약(.btn / .card / .gauge / .chip / m-* …)은 그대로 두고,
+     별칭이 가리키는 값만 DESIGN.md 토큰으로 바꿔 끼웠다.
+     덕분에 JS는 한 줄도 건드리지 않고 디자인만 교체된다.
+     이름을 바꾸면 다른 화면이 깨진다.
+   ========================================================================== */
+
+/* ---- 1. Paperlogy ------------------------------------------------------- */
+/* DESIGN.md의 Open Runde는 라틴 전용이라 한글이 렌더링되지 않는다.
+   같은 성격(기하학적 산세리프)의 한글 서체 Paperlogy로 대체한다.
+   본문에 실제로 쓰는 4웨이트만 woff2로 불러온다(웨이트당 ~164KB). */
+@font-face {
+  font-family: 'Paperlogy';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy@main/Paperlogy-4Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Paperlogy';
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy@main/Paperlogy-5Medium.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Paperlogy';
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy@main/Paperlogy-6SemiBold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Paperlogy';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy@main/Paperlogy-7Bold.woff2') format('woff2');
+}
+
+/* ---- 2. DESIGN.md 토큰 (원문 값 — 변경 금지) ----------------------------- */
+:root {
+  /* Colors */
+  --color-ink: #1e1e1e;
+  --color-carbon: #0f0f0f;
+  --color-midnight: #0d111b;
+  --color-smoke: #666666;
+  --color-fog: #8d8d8d;
+  --color-ash: #999999;
+  --color-mist: #ccd1da;
+  --color-paper: #ffffff;
+  --color-snow: #fafafa;
+  --color-concrete: #afb0b1;
+  --color-electric-blue: #0098f2;
+  --color-iris: #6c56fc;
+  --color-magenta: #f200ca;
+  --color-leaf: #5d9c06;
+  --color-coral: #ff6363;
+  --color-ice: #cfeafa;
+  --color-lavender: #e1e0fc;
+  --color-blush: #f6d2f4;
+
+  /* Typography — Family */
+  --font-sans: 'Paperlogy', ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', Roboto, 'Apple SD Gothic Neo', sans-serif;
+
+  /* Typography — Scale */
+  --text-eyebrow: 11px;      --leading-eyebrow: 1.62;      --tracking-eyebrow: 0.22px;
+  --text-body-sm: 14px;      --leading-body-sm: 1.43;      --tracking-body-sm: -0.28px;
+  --text-body: 16px;         --leading-body: 1.5;          --tracking-body: -0.32px;
+  --text-body-lg: 22px;      --leading-body-lg: 1.29;
+  --text-subheading: 24px;   --leading-subheading: 1.33;   --tracking-subheading: -0.72px;
+  --text-heading-sm: 32px;   --leading-heading-sm: 1.25;   --tracking-heading-sm: -0.96px;
+  --text-heading: 40px;      --leading-heading: 1.2;       --tracking-heading: -1.2px;
+  --text-heading-lg: 48px;   --leading-heading-lg: 1.17;   --tracking-heading-lg: -1.44px;
+  --text-display: 64px;      --leading-display: 1.13;      --tracking-display: -1.92px;
+
+  /* Typography — Weights */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* Spacing */
+  --spacing-4: 4px;    --spacing-8: 8px;    --spacing-12: 12px;  --spacing-16: 16px;
+  --spacing-20: 20px;  --spacing-24: 24px;  --spacing-28: 28px;  --spacing-32: 32px;
+  --spacing-36: 36px;  --spacing-40: 40px;  --spacing-48: 48px;  --spacing-64: 64px;
+  --spacing-80: 80px;  --spacing-96: 96px;
+
+  /* Layout */
+  --page-max-width: 1200px;
+  --section-gap: 96px;
+  --card-padding: 24px;
+  --element-gap: 12px;
+
+  /* Border Radius */
+  --radius-lg: 10px;
+  --radius-2xl: 16px;
+  --radius-2xl-2: 20px;
+  --radius-3xl: 32px;
+  --radius-full-2: 100px;
+  --radius-full-3: 888px;
+
+  /* Shadows */
+  --shadow-subtle: rgba(10, 13, 20, 0.03) 0px 1px 2px 0px;
+  --shadow-button: rgb(36, 38, 40) 0px 0px 0px 1px, rgba(27, 28, 29, 0.48) 0px 1px 2px 0px;
+  --shadow-elevated: rgba(0, 0, 0, 0.05) 0px 1.78px 8px 0px, rgba(0, 0, 0, 0.04) 0px 0.89px 2.67px 0px;
+
+  /* Surfaces */
+  --surface-paper: #ffffff;
+  --surface-snow: #fafafa;
+  --surface-ice: #cfeafa;
+  --surface-lavender: #e1e0fc;
+}
+
+/* ---- 3. 시맨틱 별칭 ------------------------------------------------------
+   기존 클래스 계약이 참조하는 이름들. 값만 DESIGN.md 토큰으로 갈아끼웠다.
+   ------------------------------------------------------------------------- */
+:root {
+  --bg: var(--color-paper);            /* 페이지 캔버스는 순백 (DESIGN.md Do) */
+  --surface: var(--color-paper);
+  --surface-alt: var(--color-snow);    /* 카드·교차 밴드 */
+  --ink: var(--color-ink);
+  --ink-soft: var(--color-smoke);       /* 본문 뉴트럴 바닥 — 이보다 밝게 쓰지 않는다 */
+  --ink-muted: var(--color-fog);
+  --line: var(--color-mist);
+  --line-soft: #e8ebf0;                 /* Mist를 흰 배경 위에서 더 옅게 쓴 헤어라인 */
+
+  --brand: var(--color-electric-blue);  /* 액센트 — 아이콘·게이지·아이브로우 전용 */
+  --brand-deep: #0077bf;                /* Electric Blue 텍스트용 진한 파생 */
+  --brand-soft: rgba(0, 152, 242, 0.10);/* Tinted Accent Card (Ice 계 저채도 워시) */
+  --action: var(--color-midnight);      /* 채움 버튼 — 액센트 컬러를 쓰지 않는다 */
+  --action-hover: var(--color-carbon);
+
+  /* 형광펜 7색 — DESIGN.md 토큰에서 파생. 상세 근거는 CORE-LOGIC.md §7 참조.
+     m-amber만 DESIGN.md에 대응 토큰이 없는 확장 색이다. */
+  --hl-red-bg:    #ffe1e1;  --hl-red-ink:    #a82a22;  /* Coral #ff6363 계 */
+  --hl-brown-bg:  #f3ebe1;  --hl-brown-ink:  #7a5726;  /* 웜 뉴트럴 */
+  --hl-rose-bg:   #fbe3f8;  --hl-rose-ink:   #9c1a86;  /* Blush / Magenta 계 */
+  --hl-amber-bg:  #fdf1cf;  --hl-amber-ink:  #8a5a00;  /* ※ 확장 토큰 */
+  --hl-violet-bg: #e1e0fc;  --hl-violet-ink: #4a37c4;  /* Lavender / Iris 계 */
+  --hl-teal-bg:   #cfeafa;  --hl-teal-ink:   #05628f;  /* Ice / Electric Blue 계 */
+  --hl-slate-bg:  #e6eaf0;  --hl-slate-ink:  #3f4b60;  /* Mist 계 */
+  --hl-ok-ink:    var(--color-leaf);                    /* "이슈 없음" */
+
+  /* 형태 — DESIGN.md 반경 위계: pill 100px / cards 16px / largeCards 32px.
+     10px 미만은 어떤 인터랙티브 요소에도 쓰지 않는다. */
+  --radius: var(--radius-2xl);
+  --radius-sm: var(--radius-lg);
+  --radius-pill: var(--radius-full-2);
+  --shadow-1: var(--shadow-subtle);
+  --shadow-2: var(--shadow-elevated);
+
+  /* 레이아웃 */
+  --container-w: var(--page-max-width);
+  --header-h: 76px;
+  --section-pad: clamp(56px, 8vw, 96px);
+
+  /* z-index */
+  --z-header: 50;
+  --z-actionbar: 40;
+  --z-toast: 1000;
+}
+
+@media (max-width: 640px) {
+  :root { --header-h: 64px; }
+}
+
+/* ---- 4. 리셋 ------------------------------------------------------------ */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+img { max-width: 100%; display: block; }
+a { color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; letter-spacing: inherit; }
+button { cursor: pointer; background: none; border: none; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+h1, h2, h3, h4, p { margin: 0; }
+strong { font-weight: var(--font-weight-semibold); }
+::selection { background: var(--surface-ice); color: var(--color-ink); }
+
+:focus-visible {
+  outline: 2px solid var(--color-electric-blue);
+  outline-offset: 2px;
+  border-radius: var(--radius-lg);
+}
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-electric-blue);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---- 5. 레이아웃 --------------------------------------------------------- */
+.container {
+  max-width: var(--container-w);
+  margin-inline: auto;
+  padding-inline: var(--spacing-24);
+}
+@media (max-width: 640px) {
+  .container { padding-inline: var(--spacing-20); }
+}
+
+/* Pill-Shaped Header Container — 흰 알약이 캔버스 위에 떠 있는 형태 */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: saturate(180%) blur(10px);
+  -webkit-backdrop-filter: saturate(180%) blur(10px);
+}
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-16);
+  width: 100%;
+  padding: var(--spacing-8) var(--spacing-12) var(--spacing-8) var(--spacing-20);
+  background: var(--color-paper);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-full-2);
+  box-shadow: var(--shadow-subtle);
+}
+.site-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  font-size: var(--text-body);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.site-logo__mark { display: inline-flex; flex-shrink: 0; }
+.site-nav { display: flex; align-items: center; gap: var(--spacing-4); }
+
+/* Outline Link Button — 알약 헤더 안의 고스트 내비 아이템 */
+.site-nav__link {
+  padding: var(--spacing-8) var(--spacing-12);
+  border-radius: var(--radius-full-2);
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-smoke);
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.site-nav__link:hover { background: var(--color-snow); color: var(--color-ink); }
+.site-nav__link[aria-current="page"] {
+  background: var(--action);
+  color: var(--color-paper);
+  box-shadow: var(--shadow-button);
+}
+
+.site-footer {
+  border-top: 1px solid var(--line-soft);
+  padding-block: var(--spacing-32);
+  margin-top: var(--section-pad);
+}
+.site-footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-8) var(--spacing-24);
+}
+.site-footer__credit {
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-smoke);
+}
+.site-footer__credit a {
+  color: var(--brand-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.site-footer__privacy {
+  font-size: var(--text-body-sm);
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-fog);
+}
+
+.page-title {
+  font-size: clamp(var(--text-heading-sm), 4vw, var(--text-heading));
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.03em;
+  line-height: var(--leading-heading-sm);
+  color: var(--color-ink);
+}
+
+/* ---- 6. 그리드 헬퍼 ------------------------------------------------------ */
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-20); }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-20); }
+@media (max-width: 960px) { .grid-3 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+.stats-row { display: flex; flex-wrap: wrap; gap: var(--spacing-28); }
+.filter-row { display: flex; flex-wrap: wrap; gap: var(--spacing-8); }
+
+/* ---- 7. 일러스트 프레임 --------------------------------------------------
+   DESIGN.md의 "일러스트 없음 · 실제 UI 아티팩트" 방침에 맞춰 원본의 인디고 PNG를
+   싣지 않았다. 다만 career-app.js 가 런타임에 만들어내는 빈 상태 마크업은
+   여전히 <img src="./assets/img/empty-state.png" onerror="...img-missing">
+   구조를 쓴다(JS는 원본 그대로 두는 게 원칙이라 건드리지 않았다).
+   → PNG가 없으니 onerror 가 걸려 .img-missing 이 붙고 .illus-fallback 이 뜬다.
+     원본이 설계해 둔 폴백 경로를 그대로 활용하는 셈이다.
+
+   구조: <div class="illus [illus-*]" role="img" aria-label="...">
+           <img src="..." onerror="...classList.add('img-missing')">
+           <div class="illus-fallback" aria-hidden="true">...대체 아트...</div>
+         </div>
+   ------------------------------------------------------------------------- */
+.illus {
+  position: relative;
+  border-radius: var(--radius-2xl-2);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.illus img { width: 100%; height: 100%; object-fit: cover; }
+.illus-fallback { display: none; width: 100%; height: 100%; }
+.illus.img-missing .illus-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 폴백 SVG는 JS 문자열 안에 인디고(#4F46E5)가 하드코딩돼 있다. JS를 고치는 대신
+   CSS로 덮어쓴다 — 프레젠테이션 속성(fill=/stroke=)은 CSS 선언보다 우선순위가
+   낮으므로 여기서 DESIGN.md 팔레트로 바꿔 칠할 수 있다. */
+.illus-fallback svg [stroke] { stroke: var(--color-electric-blue); }
+.illus-fallback svg [fill]:not([fill="none"]) { fill: var(--color-paper); }
+
+/* ---- 8. 카드 -------------------------------------------------------------
+   Feature Card: Snow 배경 · 16px · 그림자 없음. 평면이 기본이다.
+   ------------------------------------------------------------------------- */
+.card {
+  background: var(--surface-alt);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-2xl);
+  padding: var(--card-padding);
+}
+
+/* ---- 9. 버튼 -------------------------------------------------------------
+   Filled Action Button (Midnight) / Outline Link Button (흰 배경).
+   액센트 3색(#0098f2 · #6c56fc · #f200ca)은 버튼 배경으로 쓰지 않는다.
+   ------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-8);
+  padding: 11px var(--spacing-20);
+  border-radius: var(--radius-full-2);
+  border: 1px solid transparent;
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.btn-primary {
+  background: var(--action);
+  color: var(--color-paper);
+  box-shadow: var(--shadow-button);
+}
+.btn-primary:hover:not(:disabled) { background: var(--action-hover); }
+
+.btn-ghost {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  border-color: var(--line);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--color-snow);
+  border-color: var(--color-concrete);
+}
+
+/* ---- 10. 칩 / 배지 ------------------------------------------------------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px var(--spacing-16);
+  border-radius: var(--radius-full-2);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  border: 1px solid var(--line);
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-body-sm);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+button.chip { cursor: pointer; }
+button.chip:hover { background: var(--color-snow); }
+.chip.active {
+  background: var(--action);
+  color: var(--color-paper);
+  border-color: transparent;
+  box-shadow: var(--shadow-button);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px var(--spacing-12);
+  border-radius: var(--radius-full-2);
+  background: var(--color-snow);
+  border: 1px solid var(--line-soft);
+  color: var(--color-smoke);
+  font-size: 12px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.01em;
+}
+
+/* Eyebrow Label — 11px/600 · uppercase · +0.02em · Electric Blue */
+.section-eyebrow {
+  display: inline-block;
+  font-size: var(--text-eyebrow);
+  line-height: var(--leading-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  color: var(--color-electric-blue);
+  margin-bottom: var(--spacing-12);
+}
+
+/* ---- 11. 토글 그룹 ------------------------------------------------------- */
+.toggle-group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
+  background: var(--color-snow);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-full-2);
+}
+.toggle-btn {
+  padding: var(--spacing-8) var(--spacing-16);
+  border-radius: var(--radius-full-2);
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-smoke);
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+.toggle-btn:hover { color: var(--color-ink); }
+.toggle-btn.active {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-subtle);
+}
+
+/* ---- 12. 통계 / 게이지 --------------------------------------------------- */
+.stat { display: flex; flex-direction: column; gap: var(--spacing-4); }
+.stat-value {
+  font-size: clamp(var(--text-subheading), 3vw, var(--text-heading-sm));
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.03em;
+  line-height: var(--leading-heading-sm);
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+.stat-label {
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-smoke);
+}
+
+.gauge {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  border-radius: var(--radius-full-2);
+  background: var(--line);
+  overflow: hidden;
+}
+.gauge-fill {
+  height: 100%;
+  border-radius: var(--radius-full-2);
+  background: var(--color-electric-blue);
+  transition: transform 0.3s ease, background 0.15s ease;
+}
+.gauge.over .gauge-fill, .gauge-fill.over { background: var(--color-coral); }
+
+/* ---- 13. 업로드 존 ------------------------------------------------------- */
+.upload-zone {
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-2xl);
+  padding: var(--spacing-40) var(--spacing-24);
+  text-align: center;
+  background: var(--color-paper);
+  transition: border-color 0.15s ease, background 0.15s ease;
+  cursor: pointer;
+}
+.upload-zone:hover { border-color: var(--color-concrete); }
+.upload-zone.dragover {
+  border-color: var(--color-electric-blue);
+  border-style: solid;
+  background: var(--brand-soft);
+}
+
+/* ---- 14. 빈 상태 --------------------------------------------------------- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-12);
+  padding: var(--spacing-48) var(--spacing-24);
+  text-align: center;
+  font-size: var(--text-body-sm);
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-smoke);
+}
+.empty-state .illus { width: 96px; height: 96px; margin-bottom: var(--spacing-4); }
+
+/* ---- 15. 토스트 ----------------------------------------------------------
+   checker-core.js 의 toast()는 .toast 를 만들고 .show 를 붙였다 2.4초 뒤 뗀다.
+   원본 CSS에는 .show 대응 규칙이 없어 토스트가 사라지지 않았다 — 여기서 고친다.
+   (CORE-LOGIC.md §9 "원본 대비 수정한 것" 참조)
+   ------------------------------------------------------------------------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: var(--spacing-28);
+  transform: translateX(-50%) translateY(10px);
+  z-index: var(--z-toast);
+  background: var(--color-midnight);
+  color: var(--color-paper);
+  padding: var(--spacing-12) var(--spacing-24);
+  border-radius: var(--radius-full-2);
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-body-sm);
+  box-shadow: var(--shadow-elevated);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+}
+.toast.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ---- 16. [hidden] 방어 ---------------------------------------------------
+   .empty-state / .results-controls / .action-bar 등은 클래스가 display 를
+   무조건 지정한다. 브라우저 기본 [hidden] 규칙은 UA 오리진이라 author 규칙에
+   밀려 무시되고, 그러면 JS로 el.hidden = true 를 켜도 실제로는 안 사라진다.
+   author 오리진에서 한 번 더 못박아 둔다. */
+[hidden] { display: none !important; }
