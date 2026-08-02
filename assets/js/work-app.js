@@ -133,6 +133,7 @@
         '<div class="work-list__head" id="workProgress">0/0</div>' +
         '<div class="work-list__items" id="workItems"></div>' +
         '<div class="work-list__foot">' +
+          '<button type="button" class="btn btn-primary" id="workExportBtn">수정본 내려받기</button>' +
           '<button type="button" class="btn btn-ghost" id="workCloseBtn">닫기 (Esc)</button>' +
         '</div>' +
       '</aside>' +
@@ -180,6 +181,8 @@
         g.SGB.exporter.copyIssues(g.SGB.suggest.apply(itc.text, itc.suggestions));
         return;
       }
+
+      if (e.target.closest('#workExportBtn')) { exportFixed(); return; }
 
       if (e.target.closest('#workNextBtn') && items[current]) {
         g.SGB.worklist.setDone(items[current].key, true);
@@ -302,6 +305,67 @@
 
   function render() { renderList(); renderMain(); }
 
+  function download(blob, name) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  // 파일별로 수정된 셀을 모아 원본 양식 그대로 다시 쓴다.
+  // 여러 파일이면 zip 으로 묶는다 — JSZip 이 없는 페이지(창체)에서는
+  // 단일 파일만 지원하고 버튼을 숨긴다.
+  //
+  // items 의 addr === null 항목(워크백 불가 파일)은 제외한다. 각 파일은
+  // 다시 plan() 해 그 파일의 extra(연속행) 정보를 build() 에 넘겨야
+  // build 가 연속행을 비운다 — 안 그러면 재파싱 때 꼬리가 중복된다.
+  function exportFixed() {
+    var byFile = {};
+    items.forEach(function (it) {
+      if (!it.addr) return;
+      if (!byFile[it.fileName]) byFile[it.fileName] = {};
+      byFile[it.fileName][it.addr] = g.SGB.suggest.apply(it.text, it.suggestions);
+    });
+    var names = Object.keys(byFile);
+    if (!names.length) { g.SGB.core.toast('수정본을 만들 수 있는 파일이 없습니다.'); return; }
+
+    function outName(n) { return n.replace(/\.(xlsx|xls)$/i, '') + '_수정본.xlsx'; }
+
+    if (names.length === 1) {
+      var f = files.filter(function (x) { return x.name === names[0]; })[0];
+      if (!f) { g.SGB.core.toast('원본 파일을 찾지 못했습니다.'); return; }
+      var pl = g.SGB.writeback.plan(f.workbook);
+      if (!pl.ok) { g.SGB.core.toast(pl.reason || '이 파일은 수정본을 만들 수 없습니다.'); return; }
+      var buf = g.SGB.writeback.build(f.workbook, byFile[names[0]], pl);
+      download(new Blob([buf], { type: 'application/octet-stream' }), outName(names[0]));
+      g.SGB.core.toast('수정본을 내려받았습니다. NEIS에 업로드하세요.');
+      return;
+    }
+
+    if (!g.JSZip) { g.SGB.core.toast('파일이 여러 개라 이 화면에서는 내려받을 수 없습니다.'); return; }
+    var zip = new g.JSZip();
+    var skipped = [];
+    names.forEach(function (n) {
+      var wf = files.filter(function (x) { return x.name === n; })[0];
+      if (!wf) { skipped.push(n); return; }
+      var wp = g.SGB.writeback.plan(wf.workbook);
+      if (!wp.ok) { skipped.push(n); return; }
+      zip.file(outName(n), g.SGB.writeback.build(wf.workbook, byFile[n], wp));
+    });
+    if (!Object.keys(zip.files).length) {
+      g.SGB.core.toast('수정본을 만들 수 있는 파일이 없습니다.');
+      return;
+    }
+    zip.generateAsync({ type: 'blob' }).then(function (blob) {
+      download(blob, 'saenggibu_수정본.zip');
+      var made = names.length - skipped.length;
+      var msg = '수정본 ' + made + '개를 내려받았습니다.';
+      if (skipped.length) msg += ' (' + skipped.length + '개는 제외: 워크백 불가)';
+      g.SGB.core.toast(msg);
+    });
+  }
+
   function open() {
     if (!overlay) overlay = buildOverlay();
     overlay.hidden = false;
@@ -315,7 +379,30 @@
   }
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && overlay && !overlay.hidden) close();
+    if (!overlay || overlay.hidden) return;
+    if (e.key === 'Escape') { close(); return; }
+    var t = e.target.tagName;
+    if (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT') return;
+
+    if (e.key === 'j' || e.key === 'J') {
+      if (current < items.length - 1) { current++; render(); }
+      e.preventDefault();
+    } else if (e.key === 'k' || e.key === 'K') {
+      if (current > 0) { current--; render(); }
+      e.preventDefault();
+    } else if (e.key === ' ') {
+      if (items[current]) {
+        g.SGB.worklist.setDone(items[current].key, true);
+        if (current < items.length - 1) current++;
+        render();
+      }
+      e.preventDefault();
+    } else if (e.key === 'c' || e.key === 'C') {
+      if (items[current]) {
+        g.SGB.exporter.copyIssues(g.SGB.suggest.apply(items[current].text, items[current].suggestions));
+      }
+      e.preventDefault();
+    }
   });
 
   wireCapture();

@@ -46,7 +46,13 @@
 .work-item.current { background: var(--action); color: var(--color-paper); }
 .work-item.done .work-item__mark { color: var(--color-leaf); }
 .work-item__mark { width: 14px; flex: none; }
-.work-list__foot { padding: var(--spacing-16); border-top: 1px solid var(--line-soft); }
+.work-list__foot {
+  padding: var(--spacing-16);
+  border-top: 1px solid var(--line-soft);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+}
 .work-list__foot .btn { width: 100%; }
 
 /* 가운데 — 원문·수정안·미리보기 */
