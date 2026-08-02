@@ -111,5 +111,44 @@
     return out;
   }
 
-  g.SGB.suggest = { build: build };
+  // 문장 단위 삭제 후보. 바이트를 줄일 때 쓴다.
+  // 수정 제안과 같은 배열에 담아 적용 경로를 하나로 유지한다.
+  function cuts(text) {
+    var s = text == null ? '' : String(text);
+    var out = [];
+    var re = /[^.!?]+[.!?]*\s*/g;
+    var m;
+    while ((m = re.exec(s)) !== null) {
+      if (!m[0].trim()) continue;
+      out.push({
+        span: [m.index, m.index + m[0].length],
+        from: m[0].trim(), to: '', rule: 'CUT', kind: 'cut', alts: null, on: false
+      });
+      if (m[0].length === 0) re.lastIndex++;
+    }
+    return out;
+  }
+
+  // 뒤에서 앞으로 치환해 인덱스가 밀리지 않게 한다.
+  // 겹치는 span 은 앞선 것만 채택한다 — buildAnnotatedHtml 과 같은 규칙.
+  function apply(text, suggestions) {
+    var s = text == null ? '' : String(text);
+    var live = (suggestions || []).filter(function (x) {
+      return x && x.on && x.to !== null && x.to !== undefined;
+    });
+    live.sort(function (a, b) { return a.span[0] - b.span[0]; });
+
+    var kept = [];
+    var lastEnd = -1;
+    live.forEach(function (x) {
+      if (x.span[0] >= lastEnd) { kept.push(x); lastEnd = x.span[1]; }
+    });
+
+    for (var i = kept.length - 1; i >= 0; i--) {
+      s = s.slice(0, kept[i].span[0]) + kept[i].to + s.slice(kept[i].span[1]);
+    }
+    return s;
+  }
+
+  g.SGB.suggest = { build: build, cuts: cuts, apply: apply };
 })();

@@ -112,5 +112,63 @@ console.log('=== 과거형 — 어떤 제안도 이/하 를 남기지 않는다 
   });
 });
 
+console.log('=== apply — 켜진 제안만 적용, 인덱스 안 밀림 ===');
+var t1 = '자료를 정리했고 구글 문서로 작성함';
+var a1 = SGB.suggest.apply(t1, sug(t1));
+ok(a1.indexOf('정리하고') !== -1, '과거형 적용됨 (' + a1 + ')');
+ok(a1.indexOf('포털사이트') !== -1, '유의어 적용됨');
+ok(a1.indexOf('정리했고') === -1 && a1.indexOf('구글') === -1, '원문 조각 안 남음');
+
+console.log('=== apply — 끄면 원문 유지 ===');
+var offs = sug(t1).map(function (s) { return Object.assign({}, s, { on: false }); });
+ok(SGB.suggest.apply(t1, offs) === t1, '전부 끄면 원문 그대로');
+
+console.log('=== apply — to 가 null 이면 건드리지 않는다 ===');
+var t2 = '자료·발표를 정리함';
+ok(SGB.suggest.apply(t2, sug(t2)) === t2, 'manual 만 있으면 원문 그대로');
+
+console.log('=== apply — 겹치는 span 은 앞선 것만 ===');
+var ov = [{ span: [0, 4], from: 'abcd', to: 'X', kind: 'safe', on: true, rule: 'T' },
+          { span: [2, 6], from: 'cdef', to: 'Y', kind: 'safe', on: true, rule: 'T' }];
+ok(SGB.suggest.apply('abcdefgh', ov) === 'Xefgh', '겹치면 앞선 것만 적용 (실제: ' + SGB.suggest.apply('abcdefgh', ov) + ')');
+
+console.log('=== cuts — 문장 단위 삭제 후보 ===');
+var t3 = '첫 문장이다. 두 번째 문장이다. 세 번째다.';
+var cs = SGB.suggest.cuts(t3);
+ok(cs.length === 3, '문장 3개 (실제: ' + cs.length + ')');
+ok(cs.every(function (c) { return c.kind === 'cut' && c.on === false && c.to === ''; }), '전부 cut·기본해제·to 빈문자');
+var c1 = Object.assign({}, cs[1], { on: true });
+ok(SGB.suggest.apply(t3, [c1]).indexOf('두 번째') === -1, '켜면 그 문장이 사라진다');
+
+console.log('=== ★ 속성 테스트 — 적용하면 그 finding 이 사라져야 한다 ===');
+var CASES = [
+  '자료를 정리했고 구글 문서로 작성함.',
+  '‘토지’를 읽고 반론(counterargument)을 제시함.',
+  '보고서를 작성했음. 실험을 설계하였다.',
+  '앞줄\n뒷줄로 나뉨.'
+];
+CASES.forEach(function (text) {
+  var before = RS.scan(text, { id: 'general', byteLimit: 1500 });
+  var list = SGB.suggest.build(text, before);
+  var fixed = SGB.suggest.apply(text, list);
+  var after = RS.scan(fixed, { id: 'general', byteLimit: 1500 });
+
+  // 켜서 적용한 규칙은 줄어야 한다
+  var applied = {};
+  list.forEach(function (s) { if (s.on && s.to !== null) applied[s.rule] = true; });
+  Object.keys(applied).forEach(function (rule) {
+    var b = before.filter(function (f) { return f.rule === rule; }).length;
+    var a = after.filter(function (f) { return f.rule === rule; }).length;
+    ok(a < b, rule + ' 감소 ' + b + '→' + a + '  [' + text.slice(0, 18) + '…]');
+  });
+
+  // 없던 규칙이 새로 생기면 안 된다
+  var beforeRules = {};
+  before.forEach(function (f) { beforeRules[f.rule] = true; });
+  var born = after.filter(function (f) { return !beforeRules[f.rule]; })
+                  .map(function (f) { return f.rule; });
+  ok(born.length === 0, '새 이슈 없음 (생긴 것: ' + (born.join(',') || '없음') + ')');
+});
+
 console.log('\n' + (fail ? '★ 실패 ' + fail + '건' : '★ 전체 통과'));
 process.exit(fail ? 1 : 0);
