@@ -13,6 +13,11 @@ function ok(cond, msg) {
 function read(name) {
   return XLSX.read(fs.readFileSync(path.join(FIX, name)), { type: 'buffer' });
 }
+function mkSheet(rows) {
+  var b = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(b, XLSX.utils.aoa_to_sheet(rows), 'S');
+  return XLSX.read(XLSX.write(b, { type: 'array', bookType: 'xlsx' }), { type: 'array' });
+}
 
 console.log('=== plan — 표준 그리드는 셀 주소를 찾는다 ===');
 var p = SGB.writeback.plan(read('standard.xlsx'));
@@ -64,46 +69,63 @@ try { SGB.writeback.build(read('standard.xlsx'), { 'Z99': 'x' }); }
 catch (e) { threw = true; ok(e.message.indexOf('Z99') !== -1, '오류 메시지에 주소가 있음 (' + e.message + ')'); }
 ok(threw, '존재하지 않는 주소면 throw');
 
-console.log('=== plan — 다중행 창체 번들은 거부한다 ===');
-var multi = XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(multi, XLSX.utils.aoa_to_sheet([
+console.log('=== plan — 단일행 창체는 계속 동작한다 ===');
+var pc2 = SGB.writeback.plan(read('club.xlsx'));
+ok(pc2.ok === true && pc2.cells.length === 2, 'club.xlsx 여전히 2건 (실제 ok=' + pc2.ok + ' n=' + pc2.cells.length + ')');
+
+console.log('=== 워크백 왕복 — 리더가 보는 텍스트와 쓴 텍스트가 같다 ===');
+function roundTrip(rows, edit) {
+  var wb = mkSheet(rows);
+  var p = SGB.writeback.plan(wb);
+  var reps = {};
+  p.cells.forEach(function (c) { reps[c.addr] = edit(c.text); });
+  var out = SGB.writeback.build(wb, reps, p);
+  var wb2 = XLSX.read(out, { type: 'array' });
+  return { plan: p, after: SGB.writeback.plan(wb2) };
+}
+var STD_H = ['학년도', '학기', '과목', '과목코드', '반/번호', '성명', '세부능력 및 특기사항'];
+
+var rt1 = roundTrip([STD_H,
+  ['2025', '1', '국어', 'K', '3/1', '김서연', '정리함.'],
+  ['', '', '', '', '', '', '그리고 추가로 이런 부분도 잘함.']], function (t) { return t; });
+ok(rt1.after.cells.length === rt1.plan.cells.length,
+   '연속행 왕복 후 학생 수 동일 (' + rt1.plan.cells.length + '→' + rt1.after.cells.length + ')');
+ok(rt1.after.cells[0].text === rt1.plan.cells[0].text,
+   '텍스트 중복 없음 (실제: ' + JSON.stringify(rt1.after.cells[0].text) + ')');
+
+var rt2 = roundTrip([STD_H,
+  ['2025', '1', '국어', 'K', '3/1', '김서연', '자료를 정리함.'],
+  ['', '', '', '', '3/2', '박도윤', '토론에 참여함.'],
+  ['', '', '', '', '', '', '이상 담임교사 확인']], function (t) { return t; });
+ok(rt2.after.cells.length === 2 && rt2.after.cells[1].text === rt2.plan.cells[1].text,
+   '꼬리말 왕복 안정 (실제: ' + JSON.stringify(rt2.after.cells[1] && rt2.after.cells[1].text) + ')');
+
+console.log('=== 워크백 왕복 — 다중행 창체 번들도 이제 거부 대신 왕복된다 ===');
+var rt3 = roundTrip([
   ['2025학년도 진로활동 학생부 자료기록'], [''],
   ['번호', '성명', '학년', '특기사항', '희망분야'],
   ['1', '김서연', '3', '희망분야', '컴퓨터공학'],
   ['', '', '', '진로 탐색 활동에서 학과를 조사하였다.', ''],
   ['', '', '', '발표 자료를 제작했고 공유함.', '']
-]), 'Sheet1');
-var pm = SGB.writeback.plan(multi);
-ok(pm.ok === false, '다중행 번들 거부 (실제 ok=' + pm.ok + ')');
-ok(typeof pm.reason === 'string' && pm.reason.indexOf('여러 행') !== -1,
-   '이유에 여러 행 언급 (' + pm.reason + ')');
+], function (t) { return t; });
+ok(rt3.plan.ok === true, '다중행 번들도 plan.ok === true (실제: ' + rt3.plan.ok + ')');
+ok(rt3.after.cells.length === rt3.plan.cells.length,
+   '왕복 후 학생 수 동일 (' + rt3.plan.cells.length + '→' + rt3.after.cells.length + ')');
+ok(rt3.after.cells[0] && rt3.after.cells[0].text === rt3.plan.cells[0].text,
+   '왕복 후 텍스트 중복 없음 (실제: ' + JSON.stringify(rt3.after.cells[0] && rt3.after.cells[0].text) + ')');
 
-console.log('=== plan — 단일행 창체는 계속 동작한다 ===');
-var pc2 = SGB.writeback.plan(read('club.xlsx'));
-ok(pc2.ok === true && pc2.cells.length === 2, 'club.xlsx 여전히 2건 (실제 ok=' + pc2.ok + ' n=' + pc2.cells.length + ')');
-
-console.log('=== plan — 꼬리말 한 줄은 다중행이 아니다 ===');
-function mkSheet(rows) {
-  var b = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(b, XLSX.utils.aoa_to_sheet(rows), 'S');
-  return XLSX.read(XLSX.write(b, { type: 'array', bookType: 'xlsx' }), { type: 'array' });
-}
-var STD_H = ['학년도', '학기', '과목', '과목코드', '반/번호', '성명', '세부능력 및 특기사항'];
-var footer = SGB.writeback.plan(mkSheet([STD_H,
-  ['2025', '1', '국어', 'K', '3/1', '김서연', '자료를 정리함.'],
-  ['', '', '', '', '3/2', '박도윤', '토론에 참여함.'],
-  ['', '', '', '', '', '', '이상 담임교사 확인']]));
-ok(footer.ok === true, '꼬리말 있어도 통과 (실제 ok=' + footer.ok + ' reason=' + (footer.reason || '') + ')');
-ok(footer.cells.length === 2, '학생 2명만 대상 (실제: ' + footer.cells.length + ')');
-
-console.log('=== plan — 중간 빈 행·병합 과목도 통과한다 ===');
-var gaps = SGB.writeback.plan(mkSheet([STD_H,
-  ['2025', '1', '국어', 'K', '3/1', '김서연', '자료를 정리함.'],
-  ['', '', '', '', '', '', ''],
-  ['', '', '', '', '3/2', '박도윤', '토론에 참여함.'],
-  ['', '', '수학', 'M', '3/1', '김서연', '함수를 설명함.']]));
-ok(gaps.ok === true && gaps.cells.length === 3,
-   '빈 행·병합 과목 통과 (실제 ok=' + gaps.ok + ' n=' + gaps.cells.length + ')');
+console.log('=== plan 이 리더와 같은 텍스트를 본다 ===');
+[['standard.xlsx'], ['club.xlsx']].forEach(function (f) {
+  var wb4 = read(f[0]);
+  var pl = SGB.writeback.plan(wb4);
+  var rd = SGB.parse.parseWorkbook(wb4, { fileName: f[0] });
+  var rdText = [];
+  (rd.students || []).forEach(function (s) {
+    (s.entries || []).forEach(function (e) { if (e.text) rdText.push(e.text); });
+  });
+  ok(JSON.stringify(pl.cells.map(function (c) { return c.text; })) === JSON.stringify(rdText),
+     f[0] + ' plan 텍스트 === 리더 텍스트');
+});
 
 console.log('\n' + (fail ? '★ 실패 ' + fail + '건' : '★ 전체 통과'));
 process.exit(fail ? 1 : 0);

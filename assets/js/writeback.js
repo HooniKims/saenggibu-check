@@ -6,6 +6,16 @@
  * 되올릴 수 있다. 열 위치는 기존 SGB.parse._internal 을 재사용한다.
  *
  * 인쇄덤프는 NEIS 가 출력한 보고서라 되올릴 양식이 아니므로 거부한다.
+ *
+ * ---
+ * 행 걷기는 xlsx-parse.js:parseNeisRows(338·350·359줄의 getStudentNo·
+ * isStdHeaderRow·isLikelyName 포함) 와 완전히 같은 분기·같은 순서로 한다.
+ * 리더가 여러 행을 합쳐 보여주는 텍스트와 워크백이 쓰는 셀 주소가 어긋나면
+ * 그 자체로 기록이 훼손된다 — 연속행을 못 보고 첫 셀에만 쓰면 재파싱 때
+ * 리더가 남은 연속행을 또 합쳐 꼬리가 중복된다. 그래서 여기서 별도의
+ * "다중행/꼬리말" 판별 규칙을 만들지 않는다. 리더와 같은 규칙으로 걸어
+ * 같은 텍스트를 보고, 그 텍스트가 여러 셀(addr + extra[])에서 왔다는 것만
+ * 기록해 둔다 — build() 가 extra 셀들을 비워야 재파싱 때 중복이 안 생긴다.
  */
 (function () {
   'use strict';
@@ -17,92 +27,71 @@
     return g.XLSX;
   }
   function cell(v) { return v == null ? '' : String(v).trim(); }
+  // 헤더 키워드 매칭 전용 — xlsx-parse.js:normStripAll 과 동일(공백 전부 제거)
+  function normStripAll(v) { return (v == null ? '' : String(v)).replace(/\s+/g, '').replace(/﻿/g, ''); }
 
-  // 창체 번들 양식(번호·성명·…·특기사항) 헤더 찾기.
-  // career-app.js 의 findCareerBundleHeaderRow 와 같은 규칙이지만 그쪽이
-  // 노출돼 있지 않아 여기서 다시 구현한다. 테스트로 결과를 대조한다.
-  function findBundleHeader(rows) {
-    for (var r = 0; r < Math.min(rows.length, 25); r++) {
-      var cells = (rows[r] || []).map(function (c) {
-        return (c == null ? '' : String(c)).replace(/\s+/g, '');
-      });
-      if (cells.indexOf('번호') !== -1 && cells.indexOf('성명') !== -1 &&
-          cells.some(function (c) { return /특기.?사항/.test(c); })) return r;
+  // xlsx-parse.js:338 getStudentNo 와 동일
+  function getNo(row, colInfo) {
+    var noMode = colInfo.noMode, noIdx = colInfo.noIdx, banIdx = colInfo.banIdx, beonIdx = colInfo.beonIdx;
+    if (noMode === 'none') return '';
+    if (noMode === 'ban_beon') {
+      var ban = cell(row[banIdx]);
+      var beon = cell(row[beonIdx]);
+      if (ban && beon) return ban + '-' + beon;
+      return ban || beon;
     }
-    return -1;
+    return cell(row[noIdx]);
   }
 
+  // xlsx-parse.js:350 isStdHeaderRow 와 동일
+  function isHeaderRow(rawNo, rawName, colInfo) {
+    var nNo = normStripAll(rawNo);
+    var nName = normStripAll(rawName);
+    if (nNo === '반/번호' || nName === '성명') return true;
+    if (colInfo.noMode === 'ban_beon' && (nNo === '반' || nNo === '번호')) return true;
+    if (nName === '이름' || nName === '학생명') return true;
+    return false;
+  }
+
+  // xlsx-parse.js:359 isLikelyName 과 동일
+  function isLikelyName(s) {
+    return /^[가-힣]{2,5}$/.test(s) && ['성명', '이름', '학생명', '학년', '학기', '반', '번호', '과목', '교과'].indexOf(s) === -1;
+  }
+
+  // xlsx-parse.js:374-394 parseNeisRows 와 같은 순서·같은 분기로 걷는다.
+  // 다른 점은 텍스트뿐 아니라 그 텍스트가 나온 셀 주소도 같이 쌓는다는
+  // 것이다 — 첫 셀 addr 와, 거기 합쳐진 연속행 extra[]. build() 가 이걸
+  // 알아야 정확히 그 셀들만 쓰고 나머지 연속행을 비울 수 있다.
   function planStandard(XLSX, rows, colInfo) {
     var out = [];
     var subject = '';
-    for (var r = colInfo.headerRowIndex + 1; r < rows.length; r++) {
+    var current = null;
+    var start = colInfo.guessed ? colInfo.headerRowIndex : colInfo.headerRowIndex + 1;
+
+    for (var r = start; r < rows.length; r++) {
       var row = rows[r] || [];
+      var no = getNo(row, colInfo);
+      var name = cell(row[colInfo.nameIdx]);
+      var text = cell(row[colInfo.textIdx]);
       if (colInfo.subjectIdx !== -1 && cell(row[colInfo.subjectIdx])) {
         subject = cell(row[colInfo.subjectIdx]);
       }
-      var name = cell(row[colInfo.nameIdx]);
-      var text = cell(row[colInfo.textIdx]);
-      if (!name || !text) continue;
-      out.push({
-        addr: XLSX.utils.encode_cell({ r: r, c: colInfo.textIdx }),
-        no: colInfo.noIdx != null ? cell(row[colInfo.noIdx]) : '',
-        name: name, subject: subject, text: text
-      });
+      if (isHeaderRow(no, name, colInfo)) continue;
+      if (!no && !name && !text) continue;
+
+      if (isLikelyName(name) || (name && text)) {
+        current = {
+          addr: XLSX.utils.encode_cell({ r: r, c: colInfo.textIdx }),
+          no: no, name: name, subject: subject, text: text,
+          extra: [] // 이 학생 텍스트에 합쳐진 추가 셀 주소들
+        };
+        out.push(current);
+      } else if (!no && !name && text && current) {
+        current.text += (current.text ? ' ' : '') + text;
+        current.extra.push(XLSX.utils.encode_cell({ r: r, c: colInfo.textIdx }));
+      }
     }
-    return out;
-  }
-
-  var BUNDLE_NAME_COL = 1;
-  var BUNDLE_TEXT_COL = 3; // career-app.js 와 동일하게 4번째 열 고정
-
-  function planBundle(XLSX, rows, headerRow) {
-    var out = [];
-    for (var r = headerRow + 1; r < rows.length; r++) {
-      var row = rows[r] || [];
-      var name = cell(row[BUNDLE_NAME_COL]);
-      var text = cell(row[BUNDLE_TEXT_COL]);
-      if (!name || !text || text === '희망분야') continue;
-      out.push({
-        addr: XLSX.utils.encode_cell({ r: r, c: BUNDLE_TEXT_COL }),
-        no: cell(row[0]), name: name, subject: '', text: text
-      });
-    }
-    return out;
-  }
-
-  var MULTIROW_REASON = '여러 줄에 나뉘어 기록된 양식입니다. 한 학생의 글이 여러 행에 걸쳐 있어 ' +
-    '수정본 파일을 만들 수 없습니다. 고친 문장 복사를 이용하세요.';
-
-  // career-app.js:parseCareerBundleRows 는 성명이 빈 연속 행의 특기사항을
-  // 앞 학생 글에 이어붙여 하나의 문자열로 합친다(N행 → 1개 텍스트).
-  // 그 병합된 결과를 한 셀에 되쓰고 나머지 행을 비우면 원본 행 구조가
-  // 바뀌어 버려 되올릴 수 없다. 그래서 이런 다중행 기록은 절반만
-  // 처리하지 않고 통째로 거부한다 — 인쇄덤프와 같은 방식.
-  //
-  // findColumnIndices 가 표준 그리드로 오인하는 창체 번들도 있어(성명·
-  // 특기사항 헤더만 보고 표준으로 판단), nameCol/textCol 을 넘겨받아
-  // 표준 경로·번들 경로 양쪽에서 같은 검사를 쓴다.
-  //
-  // 다만 "성명 비고 특기사항 칸 채움" 만으로는 부족하다 — 표에 흔한
-  // '이상 담임교사 확인' 같은 꼬리말 한 줄도 같은 모양이다. 진짜 다중행
-  // 학생 기록은 (a) 그런 행이 2개 이상 이어지거나, (b) 그 행 뒤로 아직
-  // 더 채워진 행(다음 학생 등)이 남아 있다 — 꼬리말은 시트의 마지막
-  // 내용 행으로 혼자 끝난다. 두 조건 중 하나도 안 맞으면 꼬리말로 보고
-  // 거부하지 않는다.
-  function hasGenuineContinuation(rows, headerRow, nameCol, textCol) {
-    var contRows = [];
-    var lastContentRow = -1;
-    for (var r = headerRow + 1; r < rows.length; r++) {
-      var row = rows[r] || [];
-      var hasAny = row.some(function (c) { return cell(c) !== ''; });
-      if (hasAny) lastContentRow = r;
-      var name = cell(row[nameCol]);
-      var text = cell(row[textCol]);
-      if (!name && text) contRows.push(r);
-    }
-    if (contRows.length >= 2) return true;
-    if (contRows.length === 1 && contRows[0] !== lastContentRow) return true;
-    return false;
+    return out.filter(function (c) { return c.name; });
   }
 
   function plan(workbook) {
@@ -123,42 +112,24 @@
       };
     }
 
-    var columnFound = false;
-    // 창체 번들 헤더(번호·성명·특기사항)가 실제로 있는 시트에서만 표준
-    // 경로의 다중행 오인 가능성이 있다 — 진짜 표준 세특 그리드 헤더는
-    // 이 모양이 아니므로 findColumnIndices 가 오인할 여지가 없다.
-    var hr = findBundleHeader(rows);
-
-    var colInfo = I.findColumnIndices(rows);
+    // parseStandard/parseNeisRows 와 동일한 열 탐지 순서(정규 헤더 → 추정).
+    var colInfo = I.findColumnIndices(rows) || I.guessColumnIndices(rows);
     if (colInfo) {
-      columnFound = true;
-      if (hr !== -1 && hasGenuineContinuation(rows, colInfo.headerRowIndex, colInfo.nameIdx, colInfo.textIdx)) {
-        return { ok: false, reason: MULTIROW_REASON, format: 'standard', cells: [] };
-      }
       var cells = planStandard(XLSX, rows, colInfo);
       if (cells.length) return { ok: true, format: 'standard', cells: cells };
-    }
-
-    if (hr !== -1) {
-      columnFound = true;
-      if (hasGenuineContinuation(rows, hr, BUNDLE_NAME_COL, BUNDLE_TEXT_COL)) {
-        return { ok: false, reason: MULTIROW_REASON, format: 'bundle', cells: [] };
-      }
-      var bc = planBundle(XLSX, rows, hr);
-      if (bc.length) return { ok: true, format: 'bundle', cells: bc };
-    }
-
-    if (columnFound) {
       return { ok: false, reason: '세특 내용이 비어 있어 수정할 것이 없습니다.', format: 'unknown', cells: [] };
     }
+
     return { ok: false, reason: '세특 열을 찾지 못했습니다.', format: 'unknown', cells: [] };
   }
 
-  // replacements: { 'G2': '새 텍스트', ... }
+  // replacements: { 'G2': '새 텍스트', ... }  (plan().cells 의 addr 기준)
+  // planResult 를 함께 받으면(선택) 각 교체 셀의 extra(연속행) 를 비운다.
+  // 비우지 않으면 리더가 그 연속행을 다시 합쳐 읽어 꼬리가 중복된다.
   // 원본 workbook 을 건드리지 않도록 깊은 복사 후 교체한다.
   // 시트에 없는 주소는 조용히 버리지 않고 던진다 — NEIS 재업로드 파일에서
   // 교체 하나가 소리 없이 사라지면 교사가 알아챌 방법이 없다.
-  function build(workbook, replacements) {
+  function build(workbook, replacements, planResult) {
     var XLSX = XL();
     var copy = XLSX.read(XLSX.write(workbook, { type: 'array', bookType: 'xlsx' }), { type: 'array' });
     var ws = copy.Sheets[copy.SheetNames[0]];
@@ -171,12 +142,31 @@
       throw new Error('SGB.writeback.build: 시트에 없는 셀 주소입니다 — ' + missing.join(', '));
     }
 
+    var extraByAddr = {};
+    if (planResult && planResult.cells) {
+      planResult.cells.forEach(function (c) {
+        if (c.extra && c.extra.length) extraByAddr[c.addr] = c.extra;
+      });
+    }
+
     Object.keys(replacements || {}).forEach(function (addr) {
       ws[addr].t = 's';
       ws[addr].v = replacements[addr];
       delete ws[addr].w; // 캐시된 표시 문자열 제거
       delete ws[addr].r;
+
+      var extras = extraByAddr[addr];
+      if (extras) {
+        extras.forEach(function (eaddr) {
+          if (!ws[eaddr]) ws[eaddr] = { t: 's' };
+          ws[eaddr].t = 's';
+          ws[eaddr].v = '';
+          delete ws[eaddr].w;
+          delete ws[eaddr].r;
+        });
+      }
     });
+
     return XLSX.write(copy, { type: 'array', bookType: 'xlsx' });
   }
 
