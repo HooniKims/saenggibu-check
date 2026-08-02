@@ -111,21 +111,42 @@
     return out;
   }
 
+  // 문장 경계 찾기. 숫자 사이의 마침표(92.5, 3.14)는 종결부호가 아니다 —
+  // 그대로 쪼개면 '실험 결과 92.' / '5점을 얻음.' 같은 조각이 생기고,
+  // 교사가 그걸 삭제하면 '실험 결과 92.만족스러움.' 이 된다.
+  // from 은 원칙 1(span 슬라이스)을 그대로 따른다 — trim 하지 않는다.
+  function pushCut(out, s, a, b) {
+    if (!s.slice(a, b).trim()) return;
+    out.push({
+      span: [a, b], from: s.slice(a, b), to: '',
+      rule: 'CUT', kind: 'cut', alts: null, on: false
+    });
+  }
+
   // 문장 단위 삭제 후보. 바이트를 줄일 때 쓴다.
   // 수정 제안과 같은 배열에 담아 적용 경로를 하나로 유지한다.
   function cuts(text) {
     var s = text == null ? '' : String(text);
     var out = [];
-    var re = /[^.!?]+[.!?]*\s*/g;
-    var m;
-    while ((m = re.exec(s)) !== null) {
-      if (!m[0].trim()) continue;
-      out.push({
-        span: [m.index, m.index + m[0].length],
-        from: m[0].trim(), to: '', rule: 'CUT', kind: 'cut', alts: null, on: false
-      });
-      if (m[0].length === 0) re.lastIndex++;
+    var start = 0;
+    var i = 0;
+    while (i < s.length) {
+      var ch = s.charAt(i);
+      if (ch === '.' || ch === '!' || ch === '?') {
+        if (ch === '.' && i > 0 && i + 1 < s.length &&
+            /[0-9]/.test(s.charAt(i - 1)) && /[0-9]/.test(s.charAt(i + 1))) {
+          i++;            // 소수점 — 종결이 아니다
+          continue;
+        }
+        while (i < s.length && '.!?'.indexOf(s.charAt(i)) !== -1) i++;   // ... 같은 연속 부호
+        while (i < s.length && /\s/.test(s.charAt(i))) i++;              // 뒤따르는 공백까지 포함
+        pushCut(out, s, start, i);
+        start = i;
+        continue;
+      }
+      i++;
     }
+    if (start < s.length) pushCut(out, s, start, s.length);
     return out;
   }
 

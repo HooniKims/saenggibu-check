@@ -140,6 +140,26 @@ ok(cs.every(function (c) { return c.kind === 'cut' && c.on === false && c.to ===
 var c1 = Object.assign({}, cs[1], { on: true });
 ok(SGB.suggest.apply(t3, [c1]).indexOf('두 번째') === -1, '켜면 그 문장이 사라진다');
 
+console.log('=== cuts — 소수점은 문장 경계가 아니다 ===');
+var dec = SGB.suggest.cuts('실험 결과 92.5점을 얻음. 만족스러움.');
+ok(dec.length === 2, '문장 2개 (실제: ' + dec.length + ' — ' + JSON.stringify(dec.map(function (c) { return c.from; })) + ')');
+ok(dec[0].from.indexOf('92.5') !== -1, '소수가 쪼개지지 않음');
+
+var pi = SGB.suggest.cuts('3.14를 원주율로 사용함. 오차를 분석함.');
+ok(pi.length === 2, '3.14 문장 2개 (실제: ' + pi.length + ')');
+
+console.log('=== cuts — 삭제해도 남은 문장이 온전하다 ===');
+var dt = '실험 결과 92.5점을 얻음. 만족스러움.';
+var dc = SGB.suggest.cuts(dt);
+dc[0].on = true;
+ok(SGB.suggest.apply(dt, dc).trim() === '만족스러움.',
+   '첫 문장 삭제 → 만족스러움. (실제: ' + JSON.stringify(SGB.suggest.apply(dt, dc)) + ')');
+
+console.log('=== cuts — from 은 span 슬라이스와 일치한다 ===');
+var ct = '첫 문장이다. 두 번째 문장이다. 세 번째다.';
+ok(SGB.suggest.cuts(ct).every(function (c) { return c.from === ct.slice(c.span[0], c.span[1]); }),
+   'from === text.slice(span)');
+
 console.log('=== ★ 속성 테스트 — 적용하면 그 finding 이 사라져야 한다 ===');
 var CASES = [
   '자료를 정리했고 구글 문서로 작성함.',
