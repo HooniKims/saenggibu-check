@@ -6,3 +6,6 @@ _workspace/
 
 # macOS
 .DS_Store
+
+# SDD 작업 원장·브리프 — git 이력이 최종 기록이므로 커밋하지 않는다
+.superpowers/
