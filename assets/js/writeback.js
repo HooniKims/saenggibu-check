@@ -52,20 +52,44 @@
     return out;
   }
 
+  var BUNDLE_NAME_COL = 1;
+  var BUNDLE_TEXT_COL = 3; // career-app.js 와 동일하게 4번째 열 고정
+
   function planBundle(XLSX, rows, headerRow) {
-    var TEXT_COL = 3; // career-app.js 와 동일하게 4번째 열 고정
     var out = [];
     for (var r = headerRow + 1; r < rows.length; r++) {
       var row = rows[r] || [];
-      var name = cell(row[1]);
-      var text = cell(row[TEXT_COL]);
+      var name = cell(row[BUNDLE_NAME_COL]);
+      var text = cell(row[BUNDLE_TEXT_COL]);
       if (!name || !text || text === '희망분야') continue;
       out.push({
-        addr: XLSX.utils.encode_cell({ r: r, c: TEXT_COL }),
+        addr: XLSX.utils.encode_cell({ r: r, c: BUNDLE_TEXT_COL }),
         no: cell(row[0]), name: name, subject: '', text: text
       });
     }
     return out;
+  }
+
+  var MULTIROW_REASON = '여러 줄에 나뉘어 기록된 양식입니다. 한 학생의 글이 여러 행에 걸쳐 있어 ' +
+    '수정본 파일을 만들 수 없습니다. 고친 문장 복사를 이용하세요.';
+
+  // career-app.js:parseCareerBundleRows 는 성명이 빈 연속 행의 특기사항을
+  // 앞 학생 글에 이어붙여 하나의 문자열로 합친다(N행 → 1개 텍스트).
+  // 그 병합된 결과를 한 셀에 되쓰고 나머지 행을 비우면 원본 행 구조가
+  // 바뀌어 버려 되올릴 수 없다. 그래서 이런 다중행 기록은 절반만
+  // 처리하지 않고 통째로 거부한다 — 인쇄덤프와 같은 방식.
+  //
+  // findColumnIndices 가 표준 그리드로 오인하는 창체 번들도 있어(성명·
+  // 특기사항 헤더만 보고 표준으로 판단), nameCol/textCol 을 넘겨받아
+  // 표준 경로·번들 경로 양쪽에서 같은 검사를 쓴다.
+  function hasContinuationRows(rows, headerRow, nameCol, textCol) {
+    for (var r = headerRow + 1; r < rows.length; r++) {
+      var row = rows[r] || [];
+      var name = cell(row[nameCol]);
+      var text = cell(row[textCol]);
+      if (!name && text) return true;
+    }
+    return false;
   }
 
   function plan(workbook) {
@@ -86,29 +110,52 @@
       };
     }
 
+    var columnFound = false;
+
     var colInfo = I.findColumnIndices(rows);
     if (colInfo) {
+      columnFound = true;
+      if (hasContinuationRows(rows, colInfo.headerRowIndex, colInfo.nameIdx, colInfo.textIdx)) {
+        return { ok: false, reason: MULTIROW_REASON, format: 'standard', cells: [] };
+      }
       var cells = planStandard(XLSX, rows, colInfo);
       if (cells.length) return { ok: true, format: 'standard', cells: cells };
     }
 
     var hr = findBundleHeader(rows);
     if (hr !== -1) {
+      columnFound = true;
+      if (hasContinuationRows(rows, hr, BUNDLE_NAME_COL, BUNDLE_TEXT_COL)) {
+        return { ok: false, reason: MULTIROW_REASON, format: 'bundle', cells: [] };
+      }
       var bc = planBundle(XLSX, rows, hr);
       if (bc.length) return { ok: true, format: 'bundle', cells: bc };
     }
 
+    if (columnFound) {
+      return { ok: false, reason: '세특 내용이 비어 있어 수정할 것이 없습니다.', format: 'unknown', cells: [] };
+    }
     return { ok: false, reason: '세특 열을 찾지 못했습니다.', format: 'unknown', cells: [] };
   }
 
   // replacements: { 'G2': '새 텍스트', ... }
   // 원본 workbook 을 건드리지 않도록 깊은 복사 후 교체한다.
+  // 시트에 없는 주소는 조용히 버리지 않고 던진다 — NEIS 재업로드 파일에서
+  // 교체 하나가 소리 없이 사라지면 교사가 알아챌 방법이 없다.
   function build(workbook, replacements) {
     var XLSX = XL();
     var copy = XLSX.read(XLSX.write(workbook, { type: 'array', bookType: 'xlsx' }), { type: 'array' });
     var ws = copy.Sheets[copy.SheetNames[0]];
+
+    var missing = [];
     Object.keys(replacements || {}).forEach(function (addr) {
-      if (!ws[addr]) ws[addr] = { t: 's' };
+      if (!ws[addr]) missing.push(addr);
+    });
+    if (missing.length) {
+      throw new Error('SGB.writeback.build: 시트에 없는 셀 주소입니다 — ' + missing.join(', '));
+    }
+
+    Object.keys(replacements || {}).forEach(function (addr) {
       ws[addr].t = 's';
       ws[addr].v = replacements[addr];
       delete ws[addr].w; // 캐시된 표시 문자열 제거

@@ -58,5 +58,29 @@ SGB.writeback.build(wb3, { 'G2': 'XXX' });
 var chk = XLSX.utils.sheet_to_json(wb3.Sheets[wb3.SheetNames[0]], { header: 1, defval: '' });
 ok(chk[1][6].indexOf('XXX') === -1, '원본 워크북 무변 (실제: ' + chk[1][6].slice(0, 12) + ')');
 
+console.log('=== build — 시트에 없는 주소는 조용히 버리지 않고 던진다 ===');
+var threw = false;
+try { SGB.writeback.build(read('standard.xlsx'), { 'Z99': 'x' }); }
+catch (e) { threw = true; ok(e.message.indexOf('Z99') !== -1, '오류 메시지에 주소가 있음 (' + e.message + ')'); }
+ok(threw, '존재하지 않는 주소면 throw');
+
+console.log('=== plan — 다중행 창체 번들은 거부한다 ===');
+var multi = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(multi, XLSX.utils.aoa_to_sheet([
+  ['2025학년도 진로활동 학생부 자료기록'], [''],
+  ['번호', '성명', '학년', '특기사항', '희망분야'],
+  ['1', '김서연', '3', '희망분야', '컴퓨터공학'],
+  ['', '', '', '진로 탐색 활동에서 학과를 조사하였다.', ''],
+  ['', '', '', '발표 자료를 제작했고 공유함.', '']
+]), 'Sheet1');
+var pm = SGB.writeback.plan(multi);
+ok(pm.ok === false, '다중행 번들 거부 (실제 ok=' + pm.ok + ')');
+ok(typeof pm.reason === 'string' && pm.reason.indexOf('여러 행') !== -1,
+   '이유에 여러 행 언급 (' + pm.reason + ')');
+
+console.log('=== plan — 단일행 창체는 계속 동작한다 ===');
+var pc2 = SGB.writeback.plan(read('club.xlsx'));
+ok(pc2.ok === true && pc2.cells.length === 2, 'club.xlsx 여전히 2건 (실제 ok=' + pc2.ok + ' n=' + pc2.cells.length + ')');
+
 console.log('\n' + (fail ? '★ 실패 ' + fail + '건' : '★ 전체 통과'));
 process.exit(fail ? 1 : 0);
