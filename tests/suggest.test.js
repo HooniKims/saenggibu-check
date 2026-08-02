@@ -92,5 +92,25 @@ console.log('=== 과거형 — 표에 없으면 제안하지 않는다 ===');
   ok(s && s.kind === 'manual' && s.to === null, row[1] + ' → 제안 없음 (실제: ' + (s ? s.to : '없음') + ')');
 });
 
+console.log('=== 과거형 — 계사(이다) 활용형 ===');
+[['반장이었다', '반장이었다', '반장임'],
+ ['주도적이었다', '주도적이었다', '주도적임'],
+ ['학생이었으나 성실함', '학생이었으나', '학생이나'],
+ ['회장이었으며 성실함', '회장이었으며', '회장이며'],
+ ['부장이었음', '부장이었음', '부장임']
+].forEach(function (row) {
+  var s = sug(row[0]).filter(function (x) { return x.rule === 'R3과거시제' && x.from === row[1]; })[0];
+  ok(s && s.kind === 'pattern' && s.to === row[2],
+     row[1] + ' → ' + row[2] + ' (실제: ' + (s ? s.to : '없음') + ')');
+});
+
+console.log('=== 과거형 — 어떤 제안도 이/하 를 남기지 않는다 ===');
+['반장이었다', '모둠장이었다', '인상적이었다', '적극적이었음', '학생이었으나',
+ '자료를 정리했고', '보고서를 작성했음', '실험을 설계하였다'].forEach(function (t) {
+  sug(t).filter(function (x) { return x.rule === 'R3과거시제' && x.to; }).forEach(function (x) {
+    ok(!/이음$|하음$|이으나$|하으나$/.test(x.to), t + ' → ' + x.to + ' 가 깨진 형태가 아님');
+  });
+});
+
 console.log('\n' + (fail ? '★ 실패 ' + fail + '건' : '★ 전체 통과'));
 process.exit(fail ? 1 : 0);

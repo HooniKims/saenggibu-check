@@ -32,8 +32,18 @@
     ['하였으며', '하며'], ['하였다', '함'], ['하였고', '하고'], ['하였음', '함'],
     ['했으며', '하며'], ['했고', '하고'], ['했음', '함'], ['했다', '함'],
     ['었으나', '으나'], ['았으나', '으나'],
-    ['었다', '음'], ['았다', '음'], ['였음', '임']
+    ['었다', '음'], ['았다', '음'], ['였음', '임'],
+    // 계사(이다) 활용형 — '었다/었으나' 만으로는 앞의 '이' 가 남아
+    // '반장이었다 → 반장이음' 처럼 말을 부순다. '이' 까지 포함해 통째로 대조한다.
+    ['이었으며', '이며'], ['이었으나', '이나'], ['이었다', '임'],
+    ['이었고', '이고'], ['이었음', '임']
   ];
+
+  // 긴 어미부터 대조해야 '이었다' 가 '었다' 보다 먼저 걸린다.
+  // 배열 순서에 의존하면 나중에 항목을 덧붙일 때 조용히 깨진다.
+  var PAST_SORTED = PAST_ENDINGS.slice().sort(function (a, b) {
+    return b[0].length - a[0].length;
+  });
 
   function mk(f, from, to, kind, alts) {
     return {
@@ -75,10 +85,10 @@
   // 관형형('이끌었던'·'나왔을')과 인용 내부('느꼈다고')는 표에 없으므로
   // 자동으로 manual 로 떨어진다.
   function fromPast(f, from) {
-    for (var i = 0; i < PAST_ENDINGS.length; i++) {
-      var end = PAST_ENDINGS[i][0];
+    for (var i = 0; i < PAST_SORTED.length; i++) {
+      var end = PAST_SORTED[i][0];
       if (from.length > end.length && from.slice(-end.length) === end) {
-        return mk(f, from, from.slice(0, -end.length) + PAST_ENDINGS[i][1], 'pattern');
+        return mk(f, from, from.slice(0, -end.length) + PAST_SORTED[i][1], 'pattern');
       }
     }
     return mk(f, from, null, 'manual');
