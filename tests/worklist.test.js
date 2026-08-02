@@ -46,6 +46,20 @@ var keys = [k, SGB.worklist.key('3/2', '박도윤', '국어'), SGB.worklist.key(
 var pr = SGB.worklist.progress(keys);
 ok(pr.done === 1 && pr.total === 3, '1/3 (실제: ' + pr.done + '/' + pr.total + ')');
 
+console.log('=== picks — 선택한 대체어를 값으로 보존한다 ===');
+SGB.worklist.setPick(k, 5, '영상 창작자');
+ok(SGB.worklist.get(k).picks['5'] === '영상 창작자', 'picks 저장 (실제: ' + JSON.stringify(SGB.worklist.get(k).picks) + ')');
+delete globalThis.SGB.worklist;
+L.loadSGB(['worklist.js']);
+ok(globalThis.SGB.worklist.get(k).picks['5'] === '영상 창작자', '재로드 후에도 유지');
+
+console.log('=== picks — 이전 스키마(picks 없음) 호환 ===');
+store['sgb_worklist_v1'] = JSON.stringify({ 'old|기록|국어': { done: true, edits: { '1': false } } });
+delete globalThis.SGB.worklist;
+L.loadSGB(['worklist.js']);
+var old = globalThis.SGB.worklist.get('old|기록|국어');
+ok(old.done === true && JSON.stringify(old.picks) === '{}', '옛 기록도 안전하게 읽힘');
+
 console.log('=== reset ===');
 SGB.worklist.reset();
 ok(SGB.worklist.get(k).done === false, 'reset 후 done false');

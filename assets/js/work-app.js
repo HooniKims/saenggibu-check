@@ -97,6 +97,10 @@
     var saved = g.SGB.worklist.get(key);
     list.forEach(function (s, i) {
       if (Object.prototype.hasOwnProperty.call(saved.edits, String(i))) s.on = saved.edits[String(i)];
+      if (Object.prototype.hasOwnProperty.call(saved.picks, String(i))) {
+        s.to = saved.picks[String(i)];
+        s.on = true;
+      }
     });
     return {
       key: key, no: no, name: name, subject: subject, text: text,
@@ -148,6 +152,7 @@
         var ri = Number(radio.dataset.idx);
         it.suggestions[ri].to = radio.dataset.alt;
         it.suggestions[ri].on = true;
+        g.SGB.worklist.setPick(it.key, ri, radio.dataset.alt);
         renderMain();
       }
     });
@@ -186,6 +191,30 @@
     cut: 'm-slate', manual: 'm-brown'
   };
 
+  // 규칙 코드 → 교사가 읽을 라벨. subject-app.js:19 RULE_LABELS 와
+  // career-app.js:27 RULE_TAGS 가 같은 표를 갖고 있지만 둘 다 IIFE 안의
+  // 지역 var 라 꺼내 쓸 수 없다. 두 페이지 코드를 합쳐 여기 둔다.
+  // 표에 없으면 코드를 그대로 보여준다(새 규칙이 생겨도 화면은 살아 있게).
+  var RULE_LABELS = {
+    R1알파벳: '영문·외국어 표기', R2특수기호: '특수기호', R3과거시제: '과거형 표현',
+    R4내면심리: '내면·심리 서술', R5역량어단독: '근거 없는 역량어', R6지칭어: '인물 지칭',
+    R7기재금지: '기재불가 항목', R8무관내용: '성취기준 무관', R9줄바꿈도서명: '줄바꿈·따옴표 표기',
+    R10분량: '분량 초과', F1외국어확인: '원어 표기 (확인 필요)', F2파일형식확인: '파일 형식 (확인 필요)',
+    C1진로전공: '진로·전공 언급 (확인 필요)', C2학과직업: '학과·직업명 언급 (확인 필요)',
+    U1대학명: '대학명 언급', U2기관인증: '교외 기관·인증시험 언급 (확인 필요)',
+    U3부모직업: '부모 직업 암시 (기재불가)', N1기재유의어: '기재 유의어', N2괄호영문: '괄호 안 영문 표기',
+    S1추측표현: '추측성 표현', S2미사여구: '미사여구', S3패턴반복: '문장 패턴 반복',
+    S4템플릿반복: '상투적 템플릿 반복', S5종결혼용: '문장 종결 혼용', S6띄어쓰기: '띄어쓰기·표기 오류',
+    S7과정부족: '과정·역할 서술 부족', S8문장중복: '문장 중복',
+    M1성취기준코드: '성취기준 코드 직접 인용', M2수식기호: '수식 기호 직접 사용',
+    PROHIBITED: '기재불가', ORG: '기관·사교육', CAUTION: '기재유의어', QUOTE: '따옴표',
+    MIDDOT: '가운뎃점', PARENROMAN: '괄호영문', PLACEHOLDER: '형식표현', FLOWERY: '미사여구',
+    CAREER_LACK: '진로연계부족', PROCESS_LACK: '과정부족', SPECULATIVE: '추측표현',
+    PATTERN: '패턴반복', TEMPLATE: '템플릿', ENDING: '종결혼용', SPACING: '띄어쓰기',
+    DUP: '문장중복', CUT: '문장 삭제'
+  };
+  function ruleLabel(code) { return RULE_LABELS[code] || code; }
+
   function renderList() {
     var keys = items.map(function (it) { return it.key; });
     var pr = g.SGB.worklist.progress(keys);
@@ -223,7 +252,7 @@
       return '<div class="work-sugg__row' + (s.kind === 'manual' ? ' is-manual' : '') + '">' +
         (s.kind === 'manual' ? '<span style="width:16px"></span>'
           : '<input type="checkbox" data-idx="' + i + '"' + (s.on ? ' checked' : '') + '>') +
-        '<span class="work-sugg__rule ' + RULE_TONE[s.kind] + '">' + esc(s.rule) + '</span>' +
+        '<span class="work-sugg__rule ' + RULE_TONE[s.kind] + '">' + esc(ruleLabel(s.rule)) + '</span>' +
         '<span><span class="work-sugg__from">' + esc(s.from) + '</span> → ' + right + '</span>' +
         '</div>';
     }).join('');

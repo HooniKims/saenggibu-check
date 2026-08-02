@@ -25,16 +25,21 @@
   }
   function get(k) {
     var e = state[k];
-    return { done: !!(e && e.done), edits: (e && e.edits) || {} };
+    return { done: !!(e && e.done), edits: (e && e.edits) || {}, picks: (e && e.picks) || {} };
   }
   function ensure(k) {
-    if (!state[k]) state[k] = { done: false, edits: {} };
+    if (!state[k]) state[k] = { done: false, edits: {}, picks: {} };
+    if (!state[k].picks) state[k].picks = {};
     return state[k];
   }
   function setDone(k, v) { ensure(k).done = !!v; persist(); }
 
   // 기본값에서 벗어난 것만 담는다. 기본 체크가 대부분이라 저장량이 작다.
   function setEdit(k, idx, v) { ensure(k).edits[String(idx)] = !!v; persist(); }
+
+  // 선택지(choice) 는 고른 대체어 문자열을 그대로 보존해야 한다.
+  // setEdit 은 체크 여부라 !!v 로 강제하므로 값을 담을 수 없다.
+  function setPick(k, idx, alt) { ensure(k).picks[String(idx)] = alt; persist(); }
 
   function progress(keys) {
     var list = keys || [];
@@ -45,7 +50,7 @@
   function reset() { state = {}; persist(); }
 
   g.SGB.worklist = {
-    key: key, get: get, setDone: setDone, setEdit: setEdit,
+    key: key, get: get, setDone: setDone, setEdit: setEdit, setPick: setPick,
     progress: progress, reset: reset
   };
 })();
