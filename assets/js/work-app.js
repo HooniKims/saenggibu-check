@@ -96,10 +96,15 @@
     var key = g.SGB.worklist.key(no, name, subject);
     var saved = g.SGB.worklist.get(key);
     list.forEach(function (s, i) {
-      if (Object.prototype.hasOwnProperty.call(saved.edits, String(i))) s.on = saved.edits[String(i)];
-      if (Object.prototype.hasOwnProperty.call(saved.picks, String(i))) {
-        s.to = saved.picks[String(i)];
+      var idxKey = String(i);
+      // picks 는 '무엇을 골랐나'(값)만 복원한다. 켜짐/꺼짐은 edits 가 최종
+      // 권한을 갖는다 — 순서를 뒤집으면 해제한 선택이 되살아난다.
+      if (Object.prototype.hasOwnProperty.call(saved.picks, idxKey)) {
+        s.to = saved.picks[idxKey];
         s.on = true;
+      }
+      if (Object.prototype.hasOwnProperty.call(saved.edits, idxKey)) {
+        s.on = saved.edits[idxKey];
       }
     });
     return {

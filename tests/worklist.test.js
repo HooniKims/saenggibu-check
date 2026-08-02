@@ -60,6 +60,13 @@ L.loadSGB(['worklist.js']);
 var old = globalThis.SGB.worklist.get('old|기록|국어');
 ok(old.done === true && JSON.stringify(old.picks) === '{}', '옛 기록도 안전하게 읽힘');
 
+console.log('=== picks + edits — 해제가 선택보다 우선한다 ===');
+SGB.worklist.setPick(k, 5, '영상 창작자');
+SGB.worklist.setEdit(k, 5, false);
+var st = SGB.worklist.get(k);
+ok(st.picks['5'] === '영상 창작자', '고른 값은 남아 있다');
+ok(st.edits['5'] === false, '해제 상태도 남아 있다');
+
 console.log('=== reset ===');
 SGB.worklist.reset();
 ok(SGB.worklist.get(k).done === false, 'reset 후 done false');
