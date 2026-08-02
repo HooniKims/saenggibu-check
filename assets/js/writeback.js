@@ -82,13 +82,26 @@
   // findColumnIndices 가 표준 그리드로 오인하는 창체 번들도 있어(성명·
   // 특기사항 헤더만 보고 표준으로 판단), nameCol/textCol 을 넘겨받아
   // 표준 경로·번들 경로 양쪽에서 같은 검사를 쓴다.
-  function hasContinuationRows(rows, headerRow, nameCol, textCol) {
+  //
+  // 다만 "성명 비고 특기사항 칸 채움" 만으로는 부족하다 — 표에 흔한
+  // '이상 담임교사 확인' 같은 꼬리말 한 줄도 같은 모양이다. 진짜 다중행
+  // 학생 기록은 (a) 그런 행이 2개 이상 이어지거나, (b) 그 행 뒤로 아직
+  // 더 채워진 행(다음 학생 등)이 남아 있다 — 꼬리말은 시트의 마지막
+  // 내용 행으로 혼자 끝난다. 두 조건 중 하나도 안 맞으면 꼬리말로 보고
+  // 거부하지 않는다.
+  function hasGenuineContinuation(rows, headerRow, nameCol, textCol) {
+    var contRows = [];
+    var lastContentRow = -1;
     for (var r = headerRow + 1; r < rows.length; r++) {
       var row = rows[r] || [];
+      var hasAny = row.some(function (c) { return cell(c) !== ''; });
+      if (hasAny) lastContentRow = r;
       var name = cell(row[nameCol]);
       var text = cell(row[textCol]);
-      if (!name && text) return true;
+      if (!name && text) contRows.push(r);
     }
+    if (contRows.length >= 2) return true;
+    if (contRows.length === 1 && contRows[0] !== lastContentRow) return true;
     return false;
   }
 
@@ -111,21 +124,24 @@
     }
 
     var columnFound = false;
+    // 창체 번들 헤더(번호·성명·특기사항)가 실제로 있는 시트에서만 표준
+    // 경로의 다중행 오인 가능성이 있다 — 진짜 표준 세특 그리드 헤더는
+    // 이 모양이 아니므로 findColumnIndices 가 오인할 여지가 없다.
+    var hr = findBundleHeader(rows);
 
     var colInfo = I.findColumnIndices(rows);
     if (colInfo) {
       columnFound = true;
-      if (hasContinuationRows(rows, colInfo.headerRowIndex, colInfo.nameIdx, colInfo.textIdx)) {
+      if (hr !== -1 && hasGenuineContinuation(rows, colInfo.headerRowIndex, colInfo.nameIdx, colInfo.textIdx)) {
         return { ok: false, reason: MULTIROW_REASON, format: 'standard', cells: [] };
       }
       var cells = planStandard(XLSX, rows, colInfo);
       if (cells.length) return { ok: true, format: 'standard', cells: cells };
     }
 
-    var hr = findBundleHeader(rows);
     if (hr !== -1) {
       columnFound = true;
-      if (hasContinuationRows(rows, hr, BUNDLE_NAME_COL, BUNDLE_TEXT_COL)) {
+      if (hasGenuineContinuation(rows, hr, BUNDLE_NAME_COL, BUNDLE_TEXT_COL)) {
         return { ok: false, reason: MULTIROW_REASON, format: 'bundle', cells: [] };
       }
       var bc = planBundle(XLSX, rows, hr);

@@ -82,5 +82,28 @@ console.log('=== plan — 단일행 창체는 계속 동작한다 ===');
 var pc2 = SGB.writeback.plan(read('club.xlsx'));
 ok(pc2.ok === true && pc2.cells.length === 2, 'club.xlsx 여전히 2건 (실제 ok=' + pc2.ok + ' n=' + pc2.cells.length + ')');
 
+console.log('=== plan — 꼬리말 한 줄은 다중행이 아니다 ===');
+function mkSheet(rows) {
+  var b = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(b, XLSX.utils.aoa_to_sheet(rows), 'S');
+  return XLSX.read(XLSX.write(b, { type: 'array', bookType: 'xlsx' }), { type: 'array' });
+}
+var STD_H = ['학년도', '학기', '과목', '과목코드', '반/번호', '성명', '세부능력 및 특기사항'];
+var footer = SGB.writeback.plan(mkSheet([STD_H,
+  ['2025', '1', '국어', 'K', '3/1', '김서연', '자료를 정리함.'],
+  ['', '', '', '', '3/2', '박도윤', '토론에 참여함.'],
+  ['', '', '', '', '', '', '이상 담임교사 확인']]));
+ok(footer.ok === true, '꼬리말 있어도 통과 (실제 ok=' + footer.ok + ' reason=' + (footer.reason || '') + ')');
+ok(footer.cells.length === 2, '학생 2명만 대상 (실제: ' + footer.cells.length + ')');
+
+console.log('=== plan — 중간 빈 행·병합 과목도 통과한다 ===');
+var gaps = SGB.writeback.plan(mkSheet([STD_H,
+  ['2025', '1', '국어', 'K', '3/1', '김서연', '자료를 정리함.'],
+  ['', '', '', '', '', '', ''],
+  ['', '', '', '', '3/2', '박도윤', '토론에 참여함.'],
+  ['', '', '수학', 'M', '3/1', '김서연', '함수를 설명함.']]));
+ok(gaps.ok === true && gaps.cells.length === 3,
+   '빈 행·병합 과목 통과 (실제 ok=' + gaps.ok + ' n=' + gaps.cells.length + ')');
+
 console.log('\n' + (fail ? '★ 실패 ' + fail + '건' : '★ 전체 통과'));
 process.exit(fail ? 1 : 0);
