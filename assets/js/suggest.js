@@ -25,6 +25,16 @@
     '《': "'", '》': "'", '〈': "'", '〉': "'"
   };
 
+  // 과거형 어미 패턴표 — 검증된 것만 넣는다.
+  // '했 → 하' 단순 치환은 '작성했음 → 작성하음' 처럼 말을 부순다.
+  // 어미 단위로 긴 것부터 대조해야 '했음' 이 '했' 보다 먼저 걸린다.
+  var PAST_ENDINGS = [
+    ['하였으며', '하며'], ['하였다', '함'], ['하였고', '하고'], ['하였음', '함'],
+    ['했으며', '하며'], ['했고', '하고'], ['했음', '함'], ['했다', '함'],
+    ['었으나', '으나'], ['았으나', '으나'],
+    ['었다', '음'], ['았다', '음'], ['였음', '임']
+  ];
+
   function mk(f, from, to, kind, alts) {
     return {
       span: [f.span[0], f.span[1]],
@@ -61,6 +71,19 @@
     return mk(f, from, null, 'manual');
   }
 
+  // 어절 끝이 패턴표에 있으면 치환하고, 없으면 제안하지 않는다.
+  // 관형형('이끌었던'·'나왔을')과 인용 내부('느꼈다고')는 표에 없으므로
+  // 자동으로 manual 로 떨어진다.
+  function fromPast(f, from) {
+    for (var i = 0; i < PAST_ENDINGS.length; i++) {
+      var end = PAST_ENDINGS[i][0];
+      if (from.length > end.length && from.slice(-end.length) === end) {
+        return mk(f, from, from.slice(0, -end.length) + PAST_ENDINGS[i][1], 'pattern');
+      }
+    }
+    return mk(f, from, null, 'manual');
+  }
+
   function build(text, findings) {
     var s = text == null ? '' : String(text);
     var out = [];
@@ -72,6 +95,7 @@
       if (f.rule === 'N1기재유의어' || f.rule === 'CAUTION') { out.push(fromCaution(f, from)); return; }
       if (f.rule === 'R9줄바꿈도서명' || f.rule === 'QUOTE') { out.push(fromR9(f, from)); return; }
       if (f.rule === 'N2괄호영문' || f.rule === 'PARENROMAN') { out.push(fromParen(f, from)); return; }
+      if (f.rule === 'R3과거시제') { out.push(fromPast(f, from)); return; }
       out.push(mk(f, from, null, 'manual'));
     });
     return out;

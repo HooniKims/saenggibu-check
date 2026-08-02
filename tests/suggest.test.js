@@ -71,5 +71,26 @@ var cm = SGB.suggest.build('자료·발표를 정리함',
   .filter(function (s) { return s.rule === 'MIDDOT'; });
 ok(cm.length === 1 && cm[0].kind === 'manual' && cm[0].to === null, 'MIDDOT 은 제안 없음');
 
+console.log('=== 과거형 — 검증된 패턴만 제안 ===');
+[['자료를 정리했고 발표함', '정리했고', '정리하고'],
+ ['보고서를 작성했음', '작성했음', '작성함'],
+ ['실험을 설계하였다', '설계하였다', '설계함'],
+ ['토론에 참여했으며 제시함', '참여했으며', '참여하며'],
+ ['자신감을 얻었다', '얻었다', '얻음'],
+ ['어려움이 있었으나 수행함', '있었으나', '있으나']
+].forEach(function (row) {
+  var s = sug(row[0]).filter(function (x) { return x.rule === 'R3과거시제' && x.from === row[1]; })[0];
+  ok(s && s.kind === 'pattern' && s.to === row[2],
+     row[1] + ' → ' + row[2] + ' (실제: ' + (s ? s.to : '없음') + ')');
+});
+
+console.log('=== 과거형 — 표에 없으면 제안하지 않는다 ===');
+[['동아리를 이끌었던 경험', '이끌었던'],
+ ['결과가 나왔을 때 분석함', '나왔을']
+].forEach(function (row) {
+  var s = sug(row[0]).filter(function (x) { return x.rule === 'R3과거시제' && x.from === row[1]; })[0];
+  ok(s && s.kind === 'manual' && s.to === null, row[1] + ' → 제안 없음 (실제: ' + (s ? s.to : '없음') + ')');
+});
+
 console.log('\n' + (fail ? '★ 실패 ' + fail + '건' : '★ 전체 통과'));
 process.exit(fail ? 1 : 0);
