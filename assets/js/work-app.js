@@ -313,6 +313,29 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
 
+  // 진로활동 "묶음" 형식 감지 — career-app.js:347 isCareerBundleFormat과 완전히 같은
+  // 조건(첫 8행 안에 진로활동+학생부가 함께 나오는 줄)이다.
+  //
+  // 이 형식은 career-app.js가 고정 열(0=번호, 1=성명, 3=특기사항, 4=희망분야 값)과
+  // "희망분야" 라벨 특례로 직접 파싱해 화면에 보여준다. SGB.writeback은 이 전용
+  // 파서를 전혀 모르고 xlsx-parse.js 의 일반 열 탐지(findColumnIndices)로 같은
+  // 파일을 다시 훑는데, 그 결과 희망분야 열(4번)의 실제 값이 통째로 빠지고 "희망분야"
+  // 라벨 글자만 본문에 남는 것을 fixtures/career-bundle.xlsx로 확인했다(Task 9 조사) —
+  // 즉 집중 모드가 보여주는 문장과 실제로 셀에 쓰일 문장이 달라질 수 있다. 그래서
+  // 이 형식은 화면 표시(items)는 그대로 두되 수정본 내려받기만 막는다.
+  function isCareerBundleWorkbook(workbook) {
+    try {
+      var XLSX = g.XLSX;
+      var ws = workbook.Sheets[workbook.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: false });
+      for (var r = 0; r < Math.min(rows.length, 8); r++) {
+        var line = (rows[r] || []).map(function (c) { return (c == null ? '' : String(c)); }).join(' ');
+        if (/진로\s*활동/.test(line) && /학생부/.test(line)) return true;
+      }
+    } catch (e) { /* 읽기 실패는 이후 plan() 이 다시 처리한다 */ }
+    return false;
+  }
+
   // 파일별로 수정된 셀을 모아 원본 양식 그대로 다시 쓴다.
   // 여러 파일이면 zip 으로 묶는다 — JSZip 이 없는 페이지(창체)에서는
   // 단일 파일만 지원하고 버튼을 숨긴다.
@@ -335,6 +358,10 @@
     if (names.length === 1) {
       var f = files.filter(function (x) { return x.name === names[0]; })[0];
       if (!f) { g.SGB.core.toast('원본 파일을 찾지 못했습니다.'); return; }
+      if (isCareerBundleWorkbook(f.workbook)) {
+        g.SGB.core.toast('진로활동 묶음 형식은 화면 문장과 실제 저장될 셀 내용이 다를 수 있어 수정본을 만들 수 없습니다. "고친 문장 복사"로 NEIS에 직접 붙여넣어 주세요.');
+        return;
+      }
       var pl = g.SGB.writeback.plan(f.workbook);
       if (!pl.ok) { g.SGB.core.toast(pl.reason || '이 파일은 수정본을 만들 수 없습니다.'); return; }
       var buf = g.SGB.writeback.build(f.workbook, byFile[names[0]], pl);
@@ -343,12 +370,16 @@
       return;
     }
 
-    if (!g.JSZip) { g.SGB.core.toast('파일이 여러 개라 이 화면에서는 내려받을 수 없습니다.'); return; }
+    if (!g.JSZip) {
+      g.SGB.core.toast('파일이 여러 개면 학생별 텍스트가 합쳐져 어느 파일 것인지 알 수 없습니다. 한 파일씩 올려주세요.');
+      return;
+    }
     var zip = new g.JSZip();
     var skipped = [];
     names.forEach(function (n) {
       var wf = files.filter(function (x) { return x.name === n; })[0];
       if (!wf) { skipped.push(n); return; }
+      if (isCareerBundleWorkbook(wf.workbook)) { skipped.push(n); return; }
       var wp = g.SGB.writeback.plan(wf.workbook);
       if (!wp.ok) { skipped.push(n); return; }
       zip.file(outName(n), g.SGB.writeback.build(wf.workbook, byFile[n], wp));
