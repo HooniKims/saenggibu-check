@@ -180,6 +180,29 @@ console.log('=== cut 이 다른 제안을 포함하면 cut 이 이긴다 (Findin
   ok(out4.trim() === '이어서 토론에 참여함.', "두 번째 문장만 남는다 (실제: '" + out4.trim() + "')");
 })();
 
+console.log('=== 겹침 — 중첩된 유의어 선택이 넓은 제안에 먹히지 않는다 (Finding 4 회귀) ===');
+(function () {
+  // R1(영문 표기)·N1(유의어, span [0,3])·N2(괄호영문, span [0,12])가 전부
+  // span[0]=0 에서 겹친다. N2 는 kind:'safe' 라 기본 켜짐이고, 이전 수정(넓은
+  // span 우선)을 모든 kind 에 적용하면 교사가 고른 N1 선택(동영상 플랫폼)이
+  // N2 에 덮여 조용히 사라진다 — 화면 체크박스는 켜진 채로 남는데 실제로는
+  // 적용이 안 되는, 이 리뷰 전체가 없애려던 것과 같은 부류의 사고다.
+  var nest = '유튜브(YouTube) 영상을 제작함.';
+  var ns = SGB.suggest.build(nest, SGB.rulesSubject.scan(nest, { id: 'general', byteLimit: 1500 }));
+  ns.forEach(function (x) { if (x.rule === 'N1기재유의어' && x.from === '유튜브') { x.on = true; x.to = '동영상 플랫폼'; } });
+  var nout = SGB.suggest.apply(nest, ns);
+  ok(nout.indexOf('동영상 플랫폼') !== -1, '교사가 고른 대체어가 적용됨 (실제: ' + JSON.stringify(nout) + ')');
+})();
+
+console.log('=== 겹침 — cut 은 여전히 안쪽 제안을 삼킨다 (위 회귀 수정 후에도 유지) ===');
+(function () {
+  var ct = '‘토지’를 읽고 감상문을 작성함. 이어서 토론에 참여함.';
+  var cs2 = SGB.suggest.build(ct, SGB.rulesSubject.scan(ct, { id: 'general', byteLimit: 1500 })).concat(SGB.suggest.cuts(ct));
+  cs2.filter(function (x) { return x.kind === 'cut'; })[0].on = true;
+  var cout = SGB.suggest.apply(ct, cs2);
+  ok(cout.indexOf('토지') === -1, 'cut 이 문장을 실제로 지움 (실제: ' + JSON.stringify(cout) + ')');
+})();
+
 console.log('=== ★ 속성 테스트 — 적용하면 그 finding 이 사라져야 한다 ===');
 var CASES = [
   '자료를 정리했고 구글 문서로 작성함.',
