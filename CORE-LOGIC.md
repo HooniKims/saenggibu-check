@@ -597,13 +597,27 @@ Task 9 기준으로 실제 거부되는 것은 두 가지뿐이다.
 | 진로활동 묶음 형식 | X | `work-app.js`의 `exportFixed` (`:326-337`, `:361-364`) | `career-app.js`가 이 형식을 고정 열(0=번호, 1=성명, 3=특기사항, 4=희망분야)과 "희망분야" 라벨 특례로 자체 파싱하는데, `writeback`은 그 규칙을 모르고 `xlsx-parse.js`의 일반 열 탐지로 같은 파일을 다시 훑는다. 그 결과 희망분야 열의 실제 값이 통째로 빠지고 "희망분야"라는 라벨 글자만 본문에 남는 어긋남이 `fixtures/career-bundle.xlsx`로 확인됐다(Task 9). 화면 표시(작업 목록의 items)는 그대로 두되 **수정본 내려받기만** 막는다 |
 
 감지 방법은 앞 8행 안에 `진로활동`과 `학생부`가 같은 줄에 함께 나오는지
-보는 것이다 — `career-app.js:347` `isCareerBundleFormat`과 `work-app.js:326`
+보는 것이다 — `career-app.js:347` `isCareerBundleFormat`과 `work-app.js:31`
 `isCareerBundleWorkbook`이 완전히 같은 조건을 각자 구현하고 있다(코드 공유
-없음. 한쪽만 고치면 감지가 어긋난다).
+없음. 한쪽만 고치면 감지가 어긋난다). `isCareerBundleWorkbook`은 DOM에
+의존하지 않는 순수 함수라 파일의 `document` 가드보다 앞에 정의해 두고
+`SGB.workApp.isCareerBundleWorkbook`으로 노출한다 — `tests/writeback.test.js`가
+Node에서 이 판정을 `career-app.js`의 실제 함수 소스와 대조한다(Task 9b).
+
+이 감지가 참이면 `collect()`(`work-app.js:109` 부근)가 `writeback.plan`의
+`ok` 여부와 무관하게 그 파일에서 만든 모든 작업 항목에 `blockReason`을 붙여
+집중 모드 화면에 경고를 띄우고, `unreliable: true`로 표시해 "고친 문장 복사"
+버튼도 비활성화한다(`work-app.js:361` 부근) — 화면 텍스트 자체가 못 미더운
+상황이라 복사도 위험하기 때문이다.
 
 **다중 파일 다운로드는 워크백 거부가 아니라 페이지 기능 차이다.** 여러 파일을
 올리면 zip으로 묶어 내려받는데, JSZip이 없는 페이지(창체)에서는 단일 파일만
-지원하고 버튼이 아예 숨는다(`work-app.js:340-341` 주석, `:373-376`).
+지원한다. **버튼 자체는 숨기지 않는다** — `#workExportBtn`은 페이지·업로드
+상태와 무관하게 항상 렌더링된다(`work-app.js:136` 부근). 대신 창체에서 파일을
+2개 이상 올리고 내려받기를 누르면 `exportFixed`가 `g.JSZip` 부재를 감지해
+"파일이 여러 개면 학생별 텍스트가 합쳐져 어느 파일 것인지 알 수 없습니다.
+한 파일씩 올려주세요." 토스트를 띄우고 아무것도 내려받지 않는다(`work-app.js`의
+`exportFixed` 안, `if (!g.JSZip) { ... }` 분기).
 
 ### 8b.4 `picks`와 `edits`의 우선순위
 
@@ -611,12 +625,27 @@ Task 9 기준으로 실제 거부되는 것은 두 가지뿐이다.
 (`worklist.js:26-34`). `edits`는 체크박스 이탈값(불리언)이고, `picks`는
 `choice` 제안에서 교사가 고른 대체어 문자열이다.
 
-복원 시 순서가 중요하다(`work-app.js:98-108`) — **`picks`가 값을 채운
+복원 시 순서가 중요하다(`work-app.js:163-179`) — **`picks`가 값을 채운
 다음, `edits`가 켜짐/꺼짐의 최종 권한을 갖는다.** `picks`에 값이 있으면
 `s.to`와 `s.on = true`를 먼저 채우고, 그 다음 같은 인덱스에 `edits`가 있으면
 `s.on`을 그 값으로 덮어쓴다. 순서를 뒤집어 `edits`를 먼저 적용하면, 교사가
 `choice`를 골랐다가 체크를 해제한 케이스에서 `picks` 복원이 `on`을 다시
 `true`로 되돌려 **해제한 선택이 되살아난다.**
+
+순서만으로는 충분하지 않다 — 인덱스는 "몇 번째 제안이냐"일 뿐 "어떤
+제안이냐"를 보장하지 않는다. 수정본을 내려받아 다시 올리면 텍스트·finding이
+전부 바뀌어 같은 인덱스가 전혀 다른 제안을 가리킬 수 있다. 그래서
+`worklist.js`는 `edits`/`picks`와 같은 인덱스에 `meta = { rule, span, from }`
+(저장 당시 그 제안의 신원)도 함께 담고(`worklist.js:setEdit`/`setPick`),
+`work-app.js:163-173`의 복원 루프는 지금 그 인덱스의 제안이 `meta`와
+`rule`·`span`·`from`이 전부 같을 때만 값을 되살린다. `meta`가 없는 옛
+기록(신원 저장 이전)은 대조할 근거가 없으므로 항상 버린다 — 조용히 틀리게
+복원하는 것보다 안전하다.
+
+같은 이유로 창체(career.html)의 worklist 키는 과목이 아니라 **활동유형**을
+쓴다(`work-app.js:150-160` `activeTabType()`) — 창체 세특에는 과목 열이
+없어 `subject`가 항상 빈 문자열이라, 그대로 키에 쓰면 활동유형이 달라도
+번호·성명만 같으면 같은 키로 겹쳐 다른 탭에서 고른 값이 새어 들어간다.
 
 ### 8b.5 테스트
 

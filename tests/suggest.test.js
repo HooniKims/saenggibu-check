@@ -160,6 +160,26 @@ var ct = '첫 문장이다. 두 번째 문장이다. 세 번째다.';
 ok(SGB.suggest.cuts(ct).every(function (c) { return c.from === ct.slice(c.span[0], c.span[1]); }),
    'from === text.slice(span)');
 
+console.log('=== cut 이 다른 제안을 포함하면 cut 이 이긴다 (Finding 4 — 시작 위치가 같은 겹침) ===');
+(function () {
+  var t4 = '‘토지’를 읽고 감상문을 작성함. 이어서 토론에 참여함.';
+  var findings4 = SGB.rulesCareer.scan(t4, SGB.rulesCareer.PROFILES.club);
+  var list4 = SGB.suggest.build(t4, findings4).concat(SGB.suggest.cuts(t4));
+
+  var quote4 = list4.filter(function (s) { return s.rule === 'QUOTE' && s.span[0] === 0; })[0];
+  var cut4 = list4.filter(function (s) { return s.kind === 'cut' && s.span[0] === 0; })[0];
+  ok(!!quote4 && !!cut4, '따옴표 제안과 첫 문장 cut 이 span[0]=0 에서 겹친다');
+  ok(quote4.on === true, '따옴표 제안은 기본 켜짐(safe)');
+
+  // 교사가 화면에서 ⌫ 를 눌러 첫 문장을 지우기로 한다 — UI 는 이 행을 is-cut 으로
+  // 표시하고 되살리기 버튼을 보여준다. apply() 의 실제 결과도 그와 같아야 한다.
+  cut4.on = true;
+  var out4 = SGB.suggest.apply(t4, list4);
+  ok(out4.indexOf('토지') === -1, "cut 을 켜면 첫 문장이 실제로 사라진다 (실제: '" + out4 + "')");
+  ok(out4.indexOf('감상문을 작성함') === -1, '첫 문장 전체가 사라진다(따옴표 교정만 살아남으면 안 됨)');
+  ok(out4.trim() === '이어서 토론에 참여함.', "두 번째 문장만 남는다 (실제: '" + out4.trim() + "')");
+})();
+
 console.log('=== ★ 속성 테스트 — 적용하면 그 finding 이 사라져야 한다 ===');
 var CASES = [
   '자료를 정리했고 구글 문서로 작성함.',

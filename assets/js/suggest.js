@@ -157,7 +157,14 @@
     var live = (suggestions || []).filter(function (x) {
       return x && x.on && x.to !== null && x.to !== undefined;
     });
-    live.sort(function (a, b) { return a.span[0] - b.span[0]; });
+    // span[0] 이 같으면 더 넓은 span(끝이 더 먼 것)을 앞에 둔다. cut 은 문장
+    // 전체를 지우는 상위집합 조작이라, 시작이 같은 다른 제안(예: 문장 첫 글자의
+    // 따옴표 교정)을 안에 포함하는 경우가 흔하다. 시작 위치만으로 정렬하면 배열
+    // 순서(이 함수 호출자가 build() 결과를 cuts() 결과보다 앞에 이어붙이는 관행)에
+    // 따라 안쪽의 작은 제안이 먼저 채택되고, cut 은 겹친다는 이유로 조용히
+    // 버려진다 — 교사가 화면에서 ⌫ 로 지운 문장이 실제로는 그대로 남는다.
+    // 더 넓은 span 을 우선하면 포함 관계에서 항상 바깥쪽(=cut)이 이긴다.
+    live.sort(function (a, b) { return (a.span[0] - b.span[0]) || (b.span[1] - a.span[1]); });
 
     var kept = [];
     var lastEnd = -1;

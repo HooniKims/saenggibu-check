@@ -67,6 +67,33 @@ var st = SGB.worklist.get(k);
 ok(st.picks['5'] === '영상 창작자', '고른 값은 남아 있다');
 ok(st.edits['5'] === false, '해제 상태도 남아 있다');
 
+console.log('=== meta — 제안 신원(rule/span/from)을 edits/picks 와 함께 저장한다 (Finding 2) ===');
+var k2 = SGB.worklist.key('9/9', '테스트생', '국어');
+ok(JSON.stringify(SGB.worklist.get(k2).meta) === '{}', '처음엔 meta 비어 있음');
+SGB.worklist.setEdit(k2, 2, false, { rule: 'CUT', span: [10, 30], from: '두 번째 문장.' });
+ok(SGB.worklist.get(k2).meta['2'].rule === 'CUT', 'edits 와 함께 저장한 meta.rule (실제: ' +
+   JSON.stringify(SGB.worklist.get(k2).meta['2']) + ')');
+SGB.worklist.setPick(k2, 5, '영상 창작자', { rule: 'N1기재유의어', span: [0, 3], from: '유튜브' });
+ok(SGB.worklist.get(k2).meta['5'].from === '유튜브', 'picks 와 함께 저장한 meta.from');
+delete globalThis.SGB.worklist;
+L.loadSGB(['worklist.js']);
+var reGet = globalThis.SGB.worklist.get(k2);
+ok(reGet.meta['2'].span[0] === 10 && reGet.meta['2'].span[1] === 30, '재로드 후에도 meta.span 유지');
+
+console.log('=== meta 없이 호출해도 안전하다(기존 호출부 호환) ===');
+var k3 = SGB.worklist.key('9/8', '테스트생2', '수학');
+SGB.worklist.setEdit(k3, 0, true);
+ok(JSON.stringify(SGB.worklist.get(k3).meta) === '{}', 'meta 인자 생략하면 meta 는 비어 있는 채');
+ok(SGB.worklist.get(k3).edits['0'] === true, 'edits 값 자체는 정상 저장');
+
+console.log('=== meta — 옛 기록(meta 없음)도 안전하게 읽힌다 ===');
+store['sgb_worklist_v1'] = JSON.stringify({ 'old2|기록|국어': { done: false, edits: { '1': true }, picks: {} } });
+delete globalThis.SGB.worklist;
+L.loadSGB(['worklist.js']);
+var old2 = globalThis.SGB.worklist.get('old2|기록|국어');
+ok(JSON.stringify(old2.meta) === '{}', '메타 없는 옛 기록도 meta = {} 로 안전하게 읽힘');
+ok(old2.edits['1'] === true, '기존 edits 값은 그대로 보임 (복원 여부 판단은 work-app.js 몫)');
+
 console.log('=== reset ===');
 SGB.worklist.reset();
 ok(SGB.worklist.get(k).done === false, 'reset 후 done false');

@@ -1,5 +1,6 @@
 var fs = require('fs');
 var path = require('path');
+var vm = require('vm');
 var L = require('./helpers/load.js');
 var SGB = L.loadSGB(['checker-core.js', 'xlsx-parse.js', 'writeback.js']);
 var XLSX = globalThis.XLSX;
@@ -126,6 +127,52 @@ console.log('=== plan 이 리더와 같은 텍스트를 본다 ===');
   ok(JSON.stringify(pl.cells.map(function (c) { return c.text; })) === JSON.stringify(rdText),
      f[0] + ' plan 텍스트 === 리더 텍스트');
 });
+
+console.log('=== 창체 번들 감지 — work-app.js 와 career-app.js 가 일치한다 (Finding 8) ===');
+(function () {
+  // work-app.js 의 isCareerBundleWorkbook 은 (Finding 8 조치로) document 가드보다
+  // 앞에 정의돼 있고 SGB.workApp 에 노출돼 있어 Node 에서도 그대로 부를 수 있다.
+  L.loadSGB(['work-app.js']);
+  var workAppDetect = globalThis.SGB.workApp && globalThis.SGB.workApp.isCareerBundleWorkbook;
+  ok(typeof workAppDetect === 'function', 'SGB.workApp.isCareerBundleWorkbook 이 Node 에서도 노출됨');
+
+  // career-app.js 는 window.SGB·document 를 직접 참조하는 DOM 의존 모듈이라
+  // Node 에서 통째로 로드할 수 없다. 손으로 조건을 다시 베끼면 원본이 바뀔 때
+  // 조용히 어긋날 수 있으므로, isCareerBundleFormat 함수의 실제 소스를 파일에서
+  // 그대로 잘라내 격리된 컨텍스트에서 평가한다 — 로직을 옮겨 적지 않는다.
+  function extractFunctionSource(filePath, fnName) {
+    var src = fs.readFileSync(filePath, 'utf8');
+    var re = new RegExp('function\\s+' + fnName + '\\s*\\([^)]*\\)\\s*\\{');
+    var m = re.exec(src);
+    if (!m) throw new Error('extractFunctionSource: ' + fnName + ' 를 ' + filePath + ' 에서 찾지 못함');
+    var i = m.index + m[0].length;
+    var depth = 1;
+    while (depth > 0 && i < src.length) {
+      if (src[i] === '{') depth++;
+      else if (src[i] === '}') depth--;
+      i++;
+    }
+    return src.slice(m.index, i);
+  }
+
+  var careerAppPath = path.join(__dirname, '../assets/js/career-app.js');
+  var careerSrc = extractFunctionSource(careerAppPath, 'isCareerBundleFormat');
+  var isCareerBundleFormat = vm.runInNewContext('(' + careerSrc + ')');
+  ok(typeof isCareerBundleFormat === 'function', 'career-app.js:347 isCareerBundleFormat 소스를 그대로 추출함');
+
+  ['career-bundle.xlsx', 'club.xlsx', 'standard.xlsx', 'printdump.xlsx'].forEach(function (name) {
+    var wb = read(name);
+    var ws = wb.Sheets[wb.SheetNames[0]];
+    var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: false });
+    var fromCareerApp = isCareerBundleFormat(rows);
+    var fromWorkApp = workAppDetect(wb);
+    ok(fromCareerApp === fromWorkApp,
+       name + ' 판정 일치 (career-app=' + fromCareerApp + ', work-app=' + fromWorkApp + ')');
+  });
+
+  ok(workAppDetect(read('career-bundle.xlsx')) === true,
+     'career-bundle.xlsx 는 두 판별 함수 모두 번들 형식으로 감지한다');
+})();
 
 console.log('\n' + (fail ? '★ 실패 ' + fail + '건' : '★ 전체 통과'));
 process.exit(fail ? 1 : 0);
