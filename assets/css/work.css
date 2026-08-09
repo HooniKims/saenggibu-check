@@ -1,0 +1,158 @@
+/* ==========================================================================
+   집중 모드 오버레이 — 3분할 작업 화면
+   design-system.css 토큰을 그대로 쓴다.
+   ========================================================================== */
+
+.work-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 240px;
+  background: var(--color-paper);
+}
+.work-overlay[hidden] { display: none !important; }
+
+/* 왼쪽 — 학생 목록 겸 진행률 */
+.work-list {
+  border-right: 1px solid var(--line-soft);
+  background: var(--color-snow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.work-list__head {
+  padding: var(--spacing-20);
+  border-bottom: 1px solid var(--line-soft);
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-body-sm);
+}
+.work-list__items { flex: 1; overflow-y: auto; padding: var(--spacing-8); }
+.work-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  width: 100%;
+  padding: var(--spacing-8) var(--spacing-12);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-body-sm);
+  letter-spacing: var(--tracking-body-sm);
+  color: var(--color-smoke);
+  text-align: left;
+  cursor: pointer;
+}
+.work-item:hover { background: var(--color-paper); }
+.work-item.current { background: var(--action); color: var(--color-paper); }
+.work-item.done .work-item__mark { color: var(--color-leaf); }
+.work-item__mark { width: 14px; flex: none; }
+.work-list__foot {
+  padding: var(--spacing-16);
+  border-top: 1px solid var(--line-soft);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+}
+.work-list__foot .btn { width: 100%; }
+
+/* 가운데 — 원문·수정안·미리보기 */
+.work-main { overflow-y: auto; padding: var(--spacing-24) var(--spacing-32); }
+.work-main__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-12);
+  margin-bottom: var(--spacing-20);
+}
+.work-main__who {
+  font-size: var(--text-subheading);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.03em;
+}
+.work-block { margin-bottom: var(--spacing-24); }
+.work-block__label {
+  font-size: var(--text-eyebrow);
+  line-height: var(--leading-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  color: var(--color-electric-blue);
+  margin-bottom: var(--spacing-8);
+}
+.work-text {
+  font-size: var(--text-body);
+  line-height: 1.9;
+  letter-spacing: var(--tracking-body);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.work-preview {
+  background: var(--color-snow);
+  border-radius: var(--radius-2xl);
+  padding: var(--spacing-20);
+}
+
+/* 수정안 목록 */
+.work-sugg { display: flex; flex-direction: column; gap: 6px; }
+.work-sugg__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-12);
+  padding: var(--spacing-12);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-body-sm);
+  letter-spacing: var(--tracking-body-sm);
+}
+.work-sugg__row:hover { background: var(--color-snow); }
+.work-sugg__row input[type="checkbox"] {
+  width: 16px; height: 16px; margin-top: 2px;
+  accent-color: var(--color-electric-blue); flex: none; cursor: pointer;
+}
+.work-sugg__from { text-decoration: line-through; color: var(--color-smoke); }
+.work-sugg__to { font-weight: var(--font-weight-semibold); color: var(--color-ink); }
+.work-sugg__rule {
+  flex: none;
+  padding: 2px var(--spacing-12);
+  border-radius: var(--radius-full-2);
+  font-size: 12px;
+  font-weight: var(--font-weight-semibold);
+}
+.work-sugg__row.is-manual { opacity: 0.75; }
+
+/* 오른쪽 — 바이트 */
+.work-bytes {
+  border-left: 1px solid var(--line-soft);
+  padding: var(--spacing-20);
+  overflow-y: auto;
+}
+.work-bytes__total {
+  font-size: var(--text-body-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-smoke);
+  margin-bottom: var(--spacing-8);
+}
+.work-bytes__list { margin-top: var(--spacing-20); display: flex; flex-direction: column; gap: 6px; }
+.work-sent {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-smoke);
+}
+.work-sent__cut { margin-left: auto; cursor: pointer; padding: 2px 6px; border-radius: var(--radius-lg); }
+.work-sent__cut:hover { background: var(--hl-red-bg); color: var(--hl-red-ink); }
+.work-sent.is-cut { text-decoration: line-through; opacity: 0.5; }
+
+.work-note {
+  margin-top: var(--spacing-12);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-smoke);
+}
+
+@media (max-width: 960px) {
+  .work-overlay { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+  .work-list { border-right: none; border-bottom: 1px solid var(--line-soft); max-height: 30vh; }
+  .work-bytes { border-left: none; border-top: 1px solid var(--line-soft); }
+}
